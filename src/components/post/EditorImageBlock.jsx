@@ -1,40 +1,74 @@
 // src/components/post/EditorImageBlock.jsx
-import React from 'react';
-import { ImageIcon, X, UploadCloud } from 'lucide-react';
+import React, { useRef } from 'react';
+import { UploadCloud, X, ImageIcon, RefreshCw } from 'lucide-react';
 
 const EditorImageBlock = ({ previewUrl, onSelect, onRemove }) => {
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
+
+  // 触发原生上传
+  const handleClick = () => {
+    if (!previewUrl) {
+      fileInputRef.current?.click();
+    }
+  };
 
   return (
-    <div className="relative group w-full">
+    <div className="w-full group/img">
       {previewUrl ? (
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 dark:border-gray-700/50">
-          <img src={previewUrl} className="w-full h-auto max-h-[600px] object-contain bg-black/5" alt="preview" />
-          <button 
-            onClick={onRemove}
-            className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-xl"
-          >
-            <X size={20} />
-          </button>
+        // --- 1. 已选择图片的预览状态 ---
+        <div className="relative rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-4 border-white/50 dark:border-white/10 group">
+          <img 
+            src={previewUrl} 
+            className="w-full h-auto max-h-[500px] object-contain bg-black/5 dark:bg-white/5 transition-transform duration-700 group-hover:scale-105" 
+            alt="Preview" 
+          />
+          
+          {/* 覆盖层按钮组 */}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="p-4 bg-white/90 dark:bg-gray-800/90 text-blue-600 rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <RefreshCw size={20} />
+              <span className="text-[10px] font-black uppercase tracking-widest">更换资源</span>
+            </button>
+            <button 
+              onClick={onRemove}
+              className="p-4 bg-red-500 text-white rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
       ) : (
+        // --- 2. 未选择图片的上传占位状态 ---
         <div 
-          onClick={() => fileInputRef.current.click()}
-          className="w-full h-64 rounded-3xl border-4 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 bg-gray-50/50 dark:bg-gray-900/30 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-blue-50/30 group"
+          onClick={handleClick}
+          className="w-full py-12 px-6 rounded-[32px] border-4 border-dashed border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-400 bg-white/40 dark:bg-black/20 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-white/60 group/btn"
         >
-          <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-lg group-hover:scale-110 transition-transform">
+          <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl flex items-center justify-center mb-6 group-hover/btn:scale-110 group-hover/btn:rotate-3 transition-all duration-500">
             <UploadCloud size={40} className="text-blue-500" />
           </div>
-          <p className="mt-4 font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-xs">点击或拖拽上传图片</p>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            className="hidden" 
-            accept="image/*" 
-            onChange={onSelect} 
-          />
+          
+          <div className="text-center space-y-1">
+            <p className="text-lg font-black text-gray-900 dark:text-white tracking-tighter uppercase">
+              插入视觉星火
+            </p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
+              支持 JPG, PNG, WEBP (MAX 5MB)
+            </p>
+          </div>
         </div>
       )}
+
+      {/* 隐藏的输入框 */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*" 
+        onChange={onSelect} 
+      />
     </div>
   );
 };

@@ -1,0 +1,28 @@
+// tsconfig.json
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "useDefineForClassFields": true,
+      "lib": ["DOM", "DOM.Iterable", "ESNext"],
+      "allowJs": true, // 允许 JS 和 TS 文件混合
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true, // 开启所有严格类型检查选项
+      "forceConsistentCasingInFileNames": true,
+      "module": "ESNext",
+      "moduleResolution": "bundler", // Vite 推荐的模块解析策略
+      "resolveJsonModule": true,
+      "isolatedModules": true, // 确保每个文件都可以被安全地编译
+      "noEmit": true, // TS 只做类型检查，Vite 负责编译
+      "jsx": "react-jsx", // 使用 React 17+ 的新 JSX 转换
+      "types": ["vite/client"],
+      /* Path Aliases */
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["src/*"]
+      }
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"], // <--- 核心：包含 .d.ts 文件
+    "references": [{ "path": "./tsconfig.node.json" }] // 引用 node 环境的 tsconfig
+  }

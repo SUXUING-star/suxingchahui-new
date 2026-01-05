@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { apiGetPendingPosts, apiReviewPost } from '../utils/postUtils';
+import StatusPlaceholder from '../components/common/StatusPlaceholder';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import UserBadge from '../components/common/UserBadge';
 import { Check, X, Eye } from 'lucide-react';
@@ -22,11 +23,8 @@ function AdminPending() {
     }
   }, [user, loading, navigate]);
 
-  useEffect(() => {
-    if (token) fetchPending();
-  }, [token]);
-
   const fetchPending = async () => {
+    setLoading(true);
     try {
       const data = await apiGetPendingPosts(token);
       setPosts(data);
@@ -36,6 +34,8 @@ function AdminPending() {
       setLoading(false);
     }
   };
+  
+  useEffect(() => { if(token) fetchPending(); }, [token]);
 
   const handleReview = async (postId, action) => {
     try {
@@ -48,6 +48,26 @@ function AdminPending() {
   };
 
   if (loading) return <LoadingSpinner />;
+  if (!loading && posts.length === 0) {
+    return (
+      <StatusPlaceholder 
+        type="empty" 
+        title="清空完毕" 
+        message="所有待审星火均已处理完成" 
+        onRetry={fetchPending} // <-- 核心：点一下重新去扫一遍后台
+      />
+    );
+  }
+  if (!user?.isAdmin) {
+    return (
+      <StatusPlaceholder 
+        type="denied" 
+        title="禁止通行" 
+        message="此处为核心管理区，您的当前身份无法调取数据" 
+        showHome={true}
+      />
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">

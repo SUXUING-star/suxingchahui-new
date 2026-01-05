@@ -3,55 +3,50 @@ import React, { useState, useEffect, useRef } from 'react';
 import TagCloud from '../common/TagCloud';
 import { getTagCloudData } from '../../utils/postUtils';
 import anime from 'animejs';
+import { Hash } from 'lucide-react';
 
 function RightSidebar() {
   const [tagData, setTagData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const sidebarRef = useRef(null);
 
   useEffect(() => {
     const fetchTags = async () => {
+      setIsLoading(true);
       try {
         const data = await getTagCloudData();
-        setTagData(data); // 直接存入对象数组 [{tag, count}, ...]
-      } catch (error) {
-        console.error('Error fetching tag cloud data:', error);
-      }
+        setTagData(data || []);
+      } catch (error) {} finally { setIsLoading(false); }
     };
     fetchTags();
   }, []);
     
   useEffect(() => {
-    if (tagData.length > 0 && sidebarRef.current) {
-      anime({
-        targets: sidebarRef.current,
-        translateX: [50, 0], // 改小位移，更丝滑
-        opacity: [0, 1],
-        duration: 800,
-        easing: 'easeOutExpo'
-      });
+    if (!isLoading && tagData.length > 0 && sidebarRef.current) {
+      anime({ targets: sidebarRef.current, translateX: [50, 0], opacity: [0, 1], duration: 800, easing: 'easeOutExpo' });
     }
-  }, [tagData]);
+  }, [isLoading, tagData]);
+
+  if (isLoading) return (
+    <aside className="w-full p-4">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[32px] p-6 animate-pulse h-64"></div>
+    </aside>
+  );
 
   return (
-    <aside className="p-4 opacity-0" ref={sidebarRef}>
-      <div className="space-y-4">
-        <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center px-2">
-          <span className="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
-          标签云
+    <aside className="w-full p-4 opacity-0" ref={sidebarRef}>
+      <div className="bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[32px] p-6 shadow-xl border border-white/40 dark:border-white/5">
+        <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center mb-6 tracking-tighter uppercase">
+          <Hash size={20} className="text-blue-500 mr-2" /> 标签索引
         </h2>
         
-        {/* 核心改动：容器不再带边框和阴影，让 TagCloud 的晶体感自己发挥 */}
-        <div className="p-2">
-          {tagData.length > 0 ? (
-            <TagCloud tagData={tagData} />
-          ) : (
-            <div className="animate-pulse flex flex-wrap gap-2">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-              ))}
-            </div>
-          )}
-        </div>
+        {tagData.length === 0 ? (
+          <div className="py-10 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[24px]">
+             <p className="text-[10px] font-black text-gray-400 uppercase">无活跃标签</p>
+          </div>
+        ) : (
+          <TagCloud tagData={tagData} />
+        )}
       </div>
     </aside>
   );

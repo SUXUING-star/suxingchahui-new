@@ -1,48 +1,56 @@
 // src/pages/Tags.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tag as TagIcon } from 'lucide-react';
 import { getTagsData } from '../utils/postUtils';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import PostCard from '../components/common/PostCard'; // <-- 统一复用
+import StatusPlaceholder from '../components/common/StatusPlaceholder';
+import PostCard from '../components/common/PostCard';
 import anime from 'animejs';
 
 function Tags() {
     const [tags, setTags] = useState({});
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [selectedTag, setSelectedTag] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
-    const tagsRef = useRef(null);
+    const isInitialized = useRef(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const posts = await getTagsData();
-                const tagMap = {};
-                posts.forEach(post => {
-                    post.tags.forEach(tag => {
-                        if (!tagMap[tag]) tagMap[tag] = [];
-                        tagMap[tag].push(post);
-                    });
+    const fetchTags = useCallback(async () => {
+        setLoading(true);
+        setError(false);
+        try {
+            const posts = await getTagsData();
+            const tagMap = {};
+            posts.forEach(post => {
+                post.tags.forEach(tag => {
+                    if (!tagMap[tag]) tagMap[tag] = [];
+                    tagMap[tag].push(post);
                 });
-                setTags(tagMap);
-                const hashTag = decodeURIComponent(location.hash.slice(1));
-                if (hashTag && tagMap[hashTag]) setSelectedTag(hashTag);
-            } catch (error) {
-                console.error("Error fetching tag data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+            });
+            setTags(tagMap);
+            const hashTag = decodeURIComponent(location.hash.slice(1));
+            if (hashTag && tagMap[hashTag]) setSelectedTag(hashTag);
+        } catch (err) {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
     }, [location.hash]);
 
     useEffect(() => {
-        if (!loading && tagsRef.current) {
-            anime({ targets: '.tag-cloud-btn', scale: [0.5, 1], opacity: [0, 1], delay: anime.stagger(50), duration: 600, easing: 'easeOutBack' });
+        if (!isInitialized.current) {
+            fetchTags();
+            isInitialized.current = true;
         }
-    }, [loading]);
+    }, [fetchTags]);
+
+    useEffect(() => {
+        if (!loading && Object.keys(tags).length > 0) {
+            anime({ targets: '.tag-btn-animate', scale: [0.8, 1], opacity: [0, 1], delay: anime.stagger(30), duration: 600, easing: 'easeOutBack' });
+        }
+    }, [loading, tags]);
 
     const handleTagClick = (tag) => {
         const newTag = selectedTag === tag ? null : tag;
@@ -51,39 +59,34 @@ function Tags() {
     };
 
     if (loading) return <LoadingSpinner />;
+    if (error) return <StatusPlaceholder type="error" title="标签云坍塌" onRetry={fetchTags} />;
+    if (Object.keys(tags).length === 0) return <StatusPlaceholder type="empty" title="暂无标签" onRetry={fetchTags} />;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* 标签云 */}
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-12" ref={tagsRef}>
+        <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-20">
                 {Object.entries(tags).map(([tag, posts]) => (
                     <button 
                         key={tag} 
                         onClick={() => handleTagClick(tag)} 
-                        className={`tag-cloud-btn inline-flex items-center rounded-full px-5 py-2.5 transition-all shadow-sm ${selectedTag === tag ? 'bg-blue-600 text-white ring-4 ring-blue-100 dark:ring-blue-900/30' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:shadow-md'}`}
+                        className={`tag-btn-animate inline-flex items-center rounded-2xl px-6 py-3 transition-all shadow-md font-black text-sm uppercase tracking-widest ${selectedTag === tag ? 'bg-blue-600 text-white scale-110 shadow-blue-500/40' : 'bg-white/80 dark:bg-gray-800 text-gray-500 backdrop-blur-md border border-white/20'}`}
                     >
                         <TagIcon size={16} className="mr-2" />
-                        <span className="font-bold">{tag}</span>
-                        <span className="ml-2 text-xs opacity-60">{posts.length}</span>
+                        {tag} <span className="ml-2 opacity-40 text-[10px]">{posts.length}</span>
                     </button>
                 ))}
             </div>
 
             {selectedTag && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center space-x-4 px-4">
-                        <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">
-                            标签：{selectedTag}
+                <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <div className="inline-flex items-center space-x-6 px-8 py-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-full border border-white/20">
+                        <div className="h-2 w-10 bg-blue-600 rounded-full"></div>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tighter uppercase">
+                            TAG: {selectedTag}
                         </h2>
                     </div>
-                    {/* 核心改动：统一布局 */}
-                    <div className="flex flex-wrap justify-center sm:justify-start gap-6">
-                        {tags[selectedTag]?.map(post => (
-                            <div key={post.id} className="w-full max-w-sm">
-                                <PostCard post={post} />
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 justify-items-center">
+                        {tags[selectedTag]?.map(post => <PostCard key={post.id} post={post} />)}
                     </div>
                 </div>
             )}

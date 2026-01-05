@@ -156,86 +156,73 @@ const WriteModal = ({ isOpen, onClose, editSlug = null }) => {
         if (!isContentDone) { setStep(3); return showNotification('文章内容不能为空', 'error'); }
 
         setIsSubmitting(true);
-        showNotification('宿星集结：正在同步资源...', 'success');
+        showNotification('星火集结：正在同步资源...', 'success');
 
         try {
-            // 1. 处理封面图 (只有当 cover.file 存在时才上传)
+            // 1. 处理封面和插图 (之前的逻辑保持不变)
             let coverData = cover.preview ? { src: cover.preview, alt: title } : null;
             if (cover.file) {
                 const res = await apiUploadPostImage(cover.file, token);
                 coverData = { src: res.url, alt: title };
             }
 
-            // 2. 准备资源池
             const contentImages = [];
             const downloads = [];
-
-            // 记录图片和下载块的序号
-            let imgCount = 0;
-            let dlCount = 0;
-
-            // 3. 遍历并处理所有块 (条件上传 + 重分配语义化 ID)
             const finalBlocks = await Promise.all(blocks.map(async (b) => {
-                // --- 处理图片块 ---
                 if (b.type === 'image') {
-                    imgCount++;
-                    const seqId = `img-${imgCount}`;
-                    const seqAlt = `插图 ${imgCount}`;
-
-                    let finalUrl = b.previewUrl; // 默认使用现有预览图 (R2 地址)
-
                     if (b.file) {
-                        // A. 如果有 file 对象，说明是本地新选的，需要上传
                         const res = await apiUploadPostImage(b.file, token);
-                        finalUrl = res.url;
+                        contentImages.push({ _id: res.id, src: res.url, alt: `插图 ${contentImages.length + 1}` });
+                        return { ...b, resourceId: res.id };
+                    } else if (b.resourceId) {
+                        contentImages.push({ _id: b.resourceId, src: b.previewUrl, alt: `插图 ${contentImages.length + 1}` });
                     }
-
-                    // 将处理后的图片存入资源池，使用顺序 ID
-                    contentImages.push({ _id: seqId, src: finalUrl, alt: seqAlt });
-                    return { ...b, resourceId: seqId };
                 }
-
-                // --- 处理下载块 ---
                 if (b.type === 'download' && b.url) {
-                    dlCount++;
-                    const seqId = `dl-${dlCount}`;
-                    downloads.push({ _id: seqId, description: b.description || `资源 ${dlCount}`, url: b.url });
-                    return { ...b, resourceId: seqId };
+                    const dlId = b.resourceId || `dl-${Math.random().toString(36).substr(2, 5)}`;
+                    downloads.push({ _id: dlId, description: b.description, url: b.url });
+                    return { ...b, resourceId: dlId };
                 }
-
                 return b;
             }));
 
-            // 4. 根据处理后的 finalBlocks 拼装 Markdown 源码
-            // 这里的占位符现在是 [image:img-1], [image:img-2] 这种顺序结构
             const mdContent = finalBlocks.map(b => {
                 if (b.type === 'heading') return `### ${b.content}`;
-                if (b.type === 'image') return `[image:${b.resourceId}]`;
-                if (b.type === 'download') return `[download:${b.resourceId}]`;
+                if (b.type === 'image' && b.resourceId) return `[image:${b.resourceId}]`;
+                if (b.type === 'download' && b.resourceId) return `[download:${b.resourceId}]`;
                 return b.content;
             }).join('\n\n');
 
-            // 5. 构造标准请求模型
             const requestModel = new PostRequest({
                 title, category, tags, coverImage: coverData, contentImages, downloads,
                 content: mdContent, excerpt: blocks.find(b => b.type === 'text')?.content?.slice(0, 150) || ''
             });
 
-            // 6. 提交 API
+            // --- 核心修正：捕获后端真实的 status 响应 ---
+            let responseData;
             if (editSlug) {
-                await apiUpdatePost(editSlug, requestModel, token);
-                showNotification('星火已同步', 'success');
+                responseData = await apiUpdatePost(editSlug, requestModel, token);
             } else {
-                await apiCreatePost(requestModel, token);
-                showNotification('星火已点燃，请等待审核', 'success');
+                responseData = await apiCreatePost(requestModel, token);
             }
 
-            // --- 核心修正：执行回调刷新页面 ---
+            const finalStatus = responseData.status; // 这里的 status 是后端给的真实状态
+
+            // --- 2. 根据状态弹出精准提示 ---
+            if (finalStatus === 'published') {
+                showNotification('星火已点燃：文章已实时发布', 'success', '全站同步');
+            } else if (finalStatus === 'pending') {
+                showNotification('已送入审核：由于权限变更，内容需重新审批', 'success', '审核队列');
+            } else {
+                showNotification('状态异常，请联系管理员', 'error');
+            }
+
+            // 3. 执行页面刷新回调
             if (onWriteSuccess) {
                 onWriteSuccess();
             }
 
-            onClose(); // 关闭 Modal
+            onClose();
         } catch (err) {
             showNotification(err.message, 'error');
         } finally {
@@ -273,7 +260,12 @@ const WriteModal = ({ isOpen, onClose, editSlug = null }) => {
                         <div className="flex-1 flex flex-col overflow-hidden px-12 sm:px-24 py-12">
                             <EditorCloud id="01" title="核心元数据" isDone={isMetaDone} isActive={step === 1}>
                                 <div className="space-y-16 py-4">
-                                    <EditorTextArea value={title} onChange={setTitle} placeholder="在此处输入震撼的标题..." className="text-6xl font-black dark:text-white placeholder-gray-200" />
+                                    <EditorTextArea
+                                        value={title}
+                                        onChange={setTitle}
+                                        placeholder="标题..."
+                                        className="text-4xl sm:text-5xl font-black dark:text-white placeholder-gray-100 dark:placeholder-gray-800 leading-tight"
+                                    />
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                         <div className="relative">
                                             <label className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4 block ml-1">文章分类</label>
@@ -313,7 +305,14 @@ const WriteModal = ({ isOpen, onClose, editSlug = null }) => {
                                         {blocks.map((block, index) => (
                                             <React.Fragment key={block.id}>
                                                 <EditorBlockWrapper isFirst={index === 0} isLast={index === blocks.length - 1} isInvalid={block.invalid} onMoveUp={() => moveBlock(index, 'up')} onMoveDown={() => moveBlock(index, 'down')} onRemove={() => removeBlock(block.id)}>
-                                                    {block.type === 'heading' && <EditorTextArea placeholder="小标题..." value={block.content} onChange={v => updateBlock(block.id, 'content', v)} className="text-4xl font-black text-blue-600 border-l-8 border-blue-600 pl-6" />}
+                                                    {block.type === 'heading' && (
+                                                        <EditorTextArea
+                                                            placeholder="小标题..."
+                                                            value={block.content}
+                                                            onChange={v => updateBlock(block.id, 'content', v)}
+                                                            className="text-2xl sm:text-3xl font-black text-blue-600 border-l-8 border-blue-600 pl-6"
+                                                        />
+                                                    )}
                                                     {block.type === 'text' && <EditorTextArea placeholder="开始书写正文..." value={block.content} onChange={v => updateBlock(block.id, 'content', v)} className="text-2xl font-bold text-gray-700 dark:text-gray-300 leading-relaxed" />}
                                                     {block.type === 'image' && <EditorImageBlock previewUrl={block.previewUrl} onSelect={(e) => handleImageSelect(e, block.id)} onRemove={() => updateBlock(block.id, 'previewUrl', '')} />}
                                                     {block.type === 'download' && <EditorDownloadBlock description={block.description} url={block.url} onUpdate={(f, v) => updateBlock(block.id, f, v)} />}
