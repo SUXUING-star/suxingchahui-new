@@ -283,7 +283,7 @@ export const apiReviewPost = async (postId: string, action: 'approve' | 'reject'
 /**
  * 上传文章内的图片
  */
-export const apiUploadPostImage = async (file: File, token: string): Promise<{ success: boolean, url: string }> => {
+export const apiUploadPostImage = async (file: File, token: string): Promise<{ success: boolean; url: string; id: string; }> => {
   const formData = new FormData();
   formData.append('file', file);
   const res = await fetch(`${API_BASE_URL}/posts/upload-image`, {
@@ -291,6 +291,9 @@ export const apiUploadPostImage = async (file: File, token: string): Promise<{ s
     headers: { 'Authorization': `Bearer ${token}` },
     body: formData
   });
-  if (!res.ok) throw new Error('Upload failed');
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Upload failed');
+  }
   return res.json();
 };

@@ -1,78 +1,89 @@
 import API_BASE_URL from './apiConfig';
 import { IUser } from '@/models/User';
 
-// 统一定义响应格式
-interface AuthResponse {
+interface BaseResponse {
   success: boolean;
-  token?: string;
-  user?: IUser;
   message?: string;
-  userExists?: boolean;
 }
 
-const handleResponse = async (res: Response): Promise<any> => {
+interface AuthSuccessResponse extends BaseResponse {
+  token: string;
+  user: IUser;
+}
+
+interface CheckEmailResponse extends BaseResponse {
+  userExists: boolean;
+}
+
+const handleResponse = async <T>(res: Response): Promise<T> => {
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.message || '网络请求失败');
   }
-  return data;
+  return data as T;
 };
 
-export const apiLogin = async (payload: any): Promise<AuthResponse> => {
+export const apiLogin = async (payload: any): Promise<AuthSuccessResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse(res);
+  return handleResponse<AuthSuccessResponse>(res);
 };
 
-export const apiRegister = async (formData: any): Promise<AuthResponse> => {
+export const apiRegister = async (formData: any): Promise<AuthSuccessResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(formData),
   });
-  return handleResponse(res);
+  return handleResponse<AuthSuccessResponse>(res);
 };
 
-export const apiSendVerificationCode = async (payload: { email: string; type: 'register' | 'reset_password' }): Promise<AuthResponse> => {
+export const apiSendVerificationCode = async (payload: { 
+  email: string; 
+  type: 'register' | 'reset_password' 
+}): Promise<BaseResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/send-verification`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse(res);
+  return handleResponse<BaseResponse>(res);
 };
 
-export const apiCheckEmailExists = async (email: string): Promise<AuthResponse> => {
+export const apiCheckEmailExists = async (email: string): Promise<CheckEmailResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
-  return handleResponse(res);
+  return handleResponse<CheckEmailResponse>(res);
 };
 
-export const apiResetPassword = async (payload: any): Promise<AuthResponse> => {
+export const apiResetPassword = async (payload: any): Promise<BaseResponse> => {
   const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse(res);
+  return handleResponse<BaseResponse>(res);
 };
 
-export const apiUpdateNickname = async (nickname: string, token: string): Promise<AuthResponse> => {
+export const apiUpdateNickname = async (nickname: string, token: string): Promise<AuthSuccessResponse> => {
   const res = await fetch(`${API_BASE_URL}/user/nickname`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    headers: { 
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}` 
+    },
     body: JSON.stringify({ nickname }),
   });
-  return handleResponse(res);
+  return handleResponse<AuthSuccessResponse>(res);
 };
 
-export const apiUploadAvatar = async (file: File, token: string): Promise<AuthResponse> => {
+export const apiUploadAvatar = async (file: File, token: string): Promise<AuthSuccessResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   const res = await fetch(`${API_BASE_URL}/user/avatar`, {
@@ -80,5 +91,5 @@ export const apiUploadAvatar = async (file: File, token: string): Promise<AuthRe
     headers: { 'Authorization': `Bearer ${token}` },
     body: formData,
   });
-  return handleResponse(res);
+  return handleResponse<AuthSuccessResponse>(res);
 };
