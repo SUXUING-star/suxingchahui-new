@@ -23,6 +23,6 @@
         "@/*": ["src/*"]
       }
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"], // <--- 核心：包含 .d.ts 文件
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts", "src/components/post/editor/WriteModal.jsx", "src/components/auth/AuthModal.jsx", "src/components/common/LoadingSpinner.jsx", "src/components/common/BackToTop.jsx", "src/components/common/BackToTop.jsx", "src/components/common/LoadingSpinner.jsx", "src/components/common/LoadingSpinner.jsx", "src/components/common/LoadingSpinner.jsx", "src/App.jsx", "src/components/common/LazyImage.jsx", "src/components/common/BackButton.jsx", "src/components/common/BackToTop.jsx", "src/components/common/LoadingSpinner.jsx", "src/App.jsx", "src/components/common/BackButton.jsx", "src/components/common/LazyImage.jsx", "src/components/common/SplashScreen.jsx", "src/components/common/TagCloud.jsx", "src/components/common/StatusBadge.jsx", "src/components/common/TextFormatter.jsx", "src/components/common/UserBadge.jsx"], // <--- 核心：包含 .d.ts 文件
     "references": [{ "path": "./tsconfig.node.json" }] // 引用 node 环境的 tsconfig
   }

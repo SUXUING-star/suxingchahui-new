@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Zap } from 'lucide-react';
-import { getRecentPosts } from '../../utils/postUtils';
+import { getRecentPosts } from '../../utils/postApi';
 import anime from 'animejs';
 import UserBadge from '../common/UserBadge';
 import LazyImage from '../common/LazyImage';

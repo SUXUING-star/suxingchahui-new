@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
-import { getCategories } from '../utils/postUtils';
+import { getCategories } from '../utils/postApi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
 import PostCard from '../components/common/PostCard';

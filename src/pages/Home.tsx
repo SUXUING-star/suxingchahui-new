@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, ChangeEvent } from 're
 import PostCard from '../components/common/PostCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
-import { getPaginatedPosts, getTagCloudData, getCategories } from '../utils/postUtils';
+import { getPaginatedPosts, getTagCloudData, getCategories } from '../utils/postApi';
 import { useNotification } from '../context/NotificationContext';
 import { PostResponse } from '../models/PostResponse';
 import anime from 'animejs';

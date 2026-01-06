@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { apiCheckEmailExists, apiSendVerificationCode } from '../../utils/authUtils';
+import { apiCheckEmailExists, apiSendVerificationCode } from '../../utils/authApi';
 
 interface ForgotPwdFormProps {
   onSwitchLogin: () => void;

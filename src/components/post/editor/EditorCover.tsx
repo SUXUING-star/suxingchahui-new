@@ -37,7 +37,14 @@ const EditorCover: React.FC<EditorCoverProps> = ({ preview, onSelect, onRemove }
             <span className="text-xs font-black text-gray-500 uppercase tracking-widest">点击上传 16:9 封面图</span>
           </div>
         )}
-        <input type="file" ref={inputRef} hidden accept="image/*" onChange={onSelect} />
+        <input 
+          type="file" 
+          ref={inputRef} 
+          hidden 
+          accept="image/*" 
+          onChange={onSelect} 
+          onClick={(e) => { (e.target as HTMLInputElement).value = '' }} // 清理 value
+        />
       </div>
     </div>
   );

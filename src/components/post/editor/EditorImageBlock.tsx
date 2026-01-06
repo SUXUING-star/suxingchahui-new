@@ -11,6 +11,7 @@ const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelec
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
+    // 只有在没有预览图时，整个区域才能点击上传
     if (!previewUrl) {
       fileInputRef.current?.click();
     }
@@ -23,15 +24,15 @@ const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelec
           <img 
             src={previewUrl} 
             className="w-full h-auto max-h-[500px] object-contain bg-black/5 dark:bg-white/5 transition-transform duration-700 group-hover:scale-105" 
-            alt="Preview" 
+            alt="文章插图" 
           />
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
             <button 
               onClick={() => fileInputRef.current?.click()}
               className="p-4 bg-white/90 dark:bg-gray-800/90 text-blue-600 rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2"
             >
               <RefreshCw size={20} />
-              <span className="text-[10px] font-black uppercase tracking-widest">更换资源</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">更换</span>
             </button>
             <button 
               onClick={onRemove}
@@ -51,10 +52,10 @@ const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelec
           </div>
           <div className="text-center space-y-1">
             <p className="text-lg font-black text-gray-900 dark:text-white tracking-tighter uppercase">
-              插入视觉星火
+              插入图片
             </p>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
-              支持 JPG, PNG, WEBP (MAX 5MB)
+              支持 JPG, PNG, WEBP
             </p>
           </div>
         </div>
@@ -64,7 +65,8 @@ const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelec
         ref={fileInputRef} 
         className="hidden" 
         accept="image/*" 
-        onChange={onSelect} 
+        onChange={onSelect}
+        onClick={(e) => { (e.target as HTMLInputElement).value = '' }}
       />
     </div>
   );

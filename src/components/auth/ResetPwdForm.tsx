@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
-import { apiResetPassword } from '../../utils/authUtils';
+import { apiResetPassword } from '../../utils/authApi';
 import { useNotification } from '../../context/NotificationContext';
 import PasswordInput from '../common/PasswordInput';
 import { ShieldCheck } from 'lucide-react';

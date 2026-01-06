@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getArchive } from '../utils/postUtils';
+import { getArchive } from '../utils/postApi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
 import PostCard from '../components/common/PostCard';

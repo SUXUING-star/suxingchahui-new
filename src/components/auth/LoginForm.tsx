@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiLogin } from '../../utils/authUtils';
+import { apiLogin } from '../../utils/authApi';
 import { useNotification } from '../../context/NotificationContext';
 import PasswordInput from '../common/PasswordInput';
 import { Mail } from 'lucide-react';

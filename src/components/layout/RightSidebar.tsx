@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import TagCloud from '../common/TagCloud';
-import { getTagCloudData } from '../../utils/postUtils';
+import { getTagCloudData } from '../../utils/postApi';
 import anime from 'animejs';
 import { Hash } from 'lucide-react';
 

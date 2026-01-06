@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import { apiGetPendingPosts, apiReviewPost } from '../utils/postUtils';
+import { apiGetPendingPosts, apiReviewPost } from '../utils/postApi';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import UserBadge from '../components/common/UserBadge';

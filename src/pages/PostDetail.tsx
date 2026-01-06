@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useLayout } from '../context/LayoutContext';
-import { getPostById } from '../utils/postUtils';
+import { getPostById } from '../utils/postApi';
 import { PostResponse } from '../models/PostResponse';
 
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
-import PostLayout from '../components/post/PostLayout';
+import PostLayout from '../components/post/content/PostLayout';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

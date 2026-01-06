@@ -9,6 +9,11 @@
     <meta name="theme-color" content="#ffffff" />
     
     <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      }
+      
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -17,49 +22,80 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background-color: #ffffff; /* 纯白底 */
+        background-color: #f0f9ff; /* 浅蓝色背景，比 SplashScreen 的 #e0f7fa 更柔和 */
         opacity: 1;
         transition: opacity 0.5s ease;
+        overflow: hidden; /* 防止琴弦动画溢出 */
       }
       #initial-loader.hide { opacity: 0; pointer-events: none; }
+      
+      /* 琴弦背景动画 */
+      .string-background {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-around;
+        opacity: 0.2;
+        filter: blur(1px);
+      }
+      .string-line {
+        position: relative;
+        height: 100%;
+        animation: stringWave 4s ease-in-out infinite;
+      }
+      .string-line-inner {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background-image: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+      }
+      @keyframes stringWave {
+        0%, 100% { transform: translateX(0) scaleY(0.98); }
+        50% { transform: translateX(5px) scaleY(1.02); }
+      }
+      /* 延迟动画，让琴弦错开摆动 */
+      .string-line:nth-child(2) { animation-delay: 0.2s; }
+      .string-line:nth-child(3) { animation-delay: 0.4s; animation-duration: 3.5s; }
+      .string-line:nth-child(4) { animation-delay: 0.6s; }
+      .string-line:nth-child(5) { animation-delay: 0.8s; animation-duration: 4.5s; }
+      .string-line:nth-child(6) { animation-delay: 1s; }
+      .string-line:nth-child(7) { animation-delay: 1.2s; animation-duration: 3.8s; }
+      .string-line:nth-child(8) { animation-delay: 1.4s; }
 
+      /* 核心动画 */
       .loader-stage {
+        position: relative;
+        z-index: 10;
         display: flex;
         flex-direction: column;
         align-items: center;
       }
-
-      /* 动画容器 */
       .dots-container {
         width: 60px;
         height: 60px;
         position: relative;
-        /* 核心：旋转一圈 + 抖动的总周期 */
         animation: spin-and-jiggle 1.5s infinite cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
-
       .dot-item {
         position: absolute;
         width: 8px;
         height: 8px;
-        background-color: #3b82f6; /* 宿星蓝 */
+        background-color: #3b82f6;
         border-radius: 50%;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
       }
-
-      /* 三颗点的位置排布 */
       .dot-item:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
       .dot-item:nth-child(2) { bottom: 0; left: 20%; }
       .dot-item:nth-child(3) { bottom: 0; right: 20%; }
-
-      /* 旋转 + 底部撞击抖动动画 */
       @keyframes spin-and-jiggle {
         0% { transform: rotate(0deg); }
-        70% { transform: rotate(360deg); } /* 前 70% 时间快速转完一圈 */
+        70% { transform: rotate(360deg); }
         75% { transform: rotate(360deg) translateY(0); }
-        80% { transform: rotate(360deg) translateY(10px); } /* 撞击底部 */
-        85% { transform: rotate(360deg) translateY(-5px); } /* 反弹 */
-        90% { transform: rotate(360deg) translateY(2px); }  /* 微调 */
-        100% { transform: rotate(360deg) translateY(0); }   /* 归位 */
+        80% { transform: rotate(360deg) translateY(10px); }
+        85% { transform: rotate(360deg) translateY(-5px); }
+        90% { transform: rotate(360deg) translateY(2px); }
+        100% { transform: rotate(360deg) translateY(0); }
       }
 
       .loader-text {
@@ -75,6 +111,17 @@
   </head>
   <body>
     <div id="initial-loader">
+      <div class="string-background">
+        <!-- 琴弦动画的 HTML 结构 -->
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+        <div class="string-line"><div class="string-line-inner"></div></div>
+      </div>
       <div class="loader-stage">
         <div class="dots-container">
           <div class="dot-item"></div>
@@ -85,6 +132,18 @@
       </div>
     </div>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // 脚本逻辑：页面加载完后隐藏动画
+      window.addEventListener('load', () => {
+        const loader = document.getElementById('initial-loader');
+        if (loader) {
+          loader.classList.add('hide');
+          setTimeout(() => {
+            loader.remove();
+          }, 500); // 等待淡出动画结束再移除 DOM
+        }
+      });
+    </script>
   </body>
 </html>

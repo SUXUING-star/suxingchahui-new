@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import { useNotification } from '../context/NotificationContext';
-import { apiGetMyPosts, apiDeletePost } from '../utils/postUtils';
+import { apiGetMyPosts, apiDeletePost } from '../utils/postApi';
 import { PostResponse } from '../models/PostResponse';
 
 import LoadingSpinner from '../components/common/LoadingSpinner';

@@ -1,6 +1,6 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiUploadAvatar } from '../../utils/authUtils';
+import { apiUploadAvatar } from '../../utils/authApi';
 import { Upload, Loader } from 'lucide-react';
 
 interface UploadAvatarProps {

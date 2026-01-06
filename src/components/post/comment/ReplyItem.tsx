@@ -3,7 +3,7 @@ import { Reply, Trash2, CornerDownRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { useModal } from '../../../context/ModalContext';
 import { useNotification } from '../../../context/NotificationContext';
-import { apiPostComment } from '../../../utils/postUtils';
+import { apiPostComment } from '../../../utils/postApi';
 import UserBadge from '../../common/UserBadge';
 import { Comment } from '../../../models/PostResponse';
 

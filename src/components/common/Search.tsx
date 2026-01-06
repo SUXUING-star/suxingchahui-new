@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, ChangeEvent } from 're
 import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, X as CloseIcon, Loader2 } from 'lucide-react';
 import _ from 'lodash';
-import { apiSearchPosts } from '../../utils/postUtils';
+import { apiSearchPosts } from '../../utils/postApi';
 import { PostResponse } from '../../models/PostResponse'; // 直接用你定义的 PostResponse
 
 const Search: React.FC = () => {

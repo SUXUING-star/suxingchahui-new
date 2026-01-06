@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tag as TagIcon } from 'lucide-react';
-import { getTagsData } from '../utils/postUtils';
+import { getTagsData } from '../utils/postApi';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import StatusPlaceholder from '../components/common/StatusPlaceholder';
 import PostCard from '../components/common/PostCard';

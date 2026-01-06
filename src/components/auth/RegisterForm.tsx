@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, ChangeEvent } from 'react';
-import { apiRegister, apiSendVerificationCode } from '../../utils/authUtils';
+import { apiRegister, apiSendVerificationCode } from '../../utils/authApi';
 import { useNotification } from '../../context/NotificationContext';
 import PasswordInput from '../common/PasswordInput';
 import { User, Mail, ShieldCheck, Ticket } from 'lucide-react';
