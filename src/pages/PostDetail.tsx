@@ -33,6 +33,7 @@ const PostDetail: React.FC = () => {
       const data = await getPostById(id, token, true);
       if (data) {
         setPost(data);
+        console.log(data);
         if (data.coverImage?.src) setCustomBg(data.coverImage.src);
       } else {
         setPost(null); // Explicitly set to null if no data found

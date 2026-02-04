@@ -89,6 +89,18 @@ const PostLayout: React.FC<PostLayoutProps> = ({
         <span className="text-[9px] font-black mt-1 text-gray-400">{totalComments}</span>
       </button>
 
+      {/* 新增：编辑悬浮按钮 */}
+      {isOwnerOrAdmin && (
+        <button
+          onClick={() => openWriteModal(post.slug, onRefresh)}
+          className="fixed bottom-48 left-10 sm:bottom-28 sm:left-auto sm:right-32 w-14 h-14 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col items-center justify-center border border-white/20 z-[90] hover:scale-110 active:scale-95 transition-all group"
+          aria-label="编辑文章"
+        >
+          <Edit3 size={20} className="text-green-500" />
+          <span className="text-[9px] font-black mt-1 text-gray-400">编辑</span>
+        </button>
+      )}
+
       {/* 整体大容器 */}
       <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start">
 
