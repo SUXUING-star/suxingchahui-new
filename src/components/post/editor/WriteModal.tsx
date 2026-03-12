@@ -42,7 +42,7 @@ interface WriteModalProps {
 }
 
 const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = null }) => {
-    const { token } = useAuth();
+    const { token, user } = useAuth(); 
     const { showNotification } = useNotification();
     const { onWriteSuccess } = useModal();
     
@@ -50,6 +50,7 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
     const [step, setStep] = useState<number>(1);
     const [mode, setMode] = useState<'edit' | 'preview'>('edit');
     const [title, setTitle] = useState<string>('');
+    const [topped, setTopped] = useState<boolean>(false);
     const [category, setCategory] = useState<string>('');
     const [tags, setTags] = useState<string[]>([]);
     const [cover, setCover] = useState<CoverState>({ file: null, preview: '' });
@@ -69,6 +70,7 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         (b.type === 'image' && (b.previewUrl || b.file)) ||
         (b.type === 'download' && b.url && b.url.trim() !== '')
     );
+    const isAdmin = !!user?.isAdmin; // 3. 增加 isAdmin 判断
 
     // --- Effects ---
     const fetchMetadata = async () => {
@@ -78,18 +80,20 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         } catch (err) { }
     };
 
+    // --- 加载逻辑修改 ---
     const loadExistingPost = useCallback(async () => {
         if (!editSlug) return;
         setIsLoadingData(true);
         try {
             const post = await getPostById(editSlug);
             if (!post) throw new Error('文章未找到');
+            
             setTitle(post.title);
             setCategory(post.category);
             setTags(post.tags);
+            setTopped(post.topped); // 2. 【关键】加载已有的置顶状态
             setCover({ file: null, preview: post.coverImage?.src || '' });
             
-            // 解析逻辑依赖 mdParser 的正确性
             const parsedBlocks = parseMDToBlocks(post.content, post.contentImages, post.downloads);
             const sanitizedBlocks: Block[] = parsedBlocks.map(b => ({
                 id: b.id,
@@ -109,10 +113,15 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         } finally {
             setIsLoadingData(false);
         }
-    }, [editSlug, onClose, showNotification, token]);
+    }, [editSlug, onClose, showNotification]);
 
     const resetState = useCallback(() => {
-        setTitle(''); setCategory(''); setTags([]); setStep(1); setMode('edit');
+        setTitle(''); 
+        setCategory(''); 
+        setTags([]); 
+        setStep(1); 
+        setMode('edit');
+        setTopped(false); // 3. 重置状态
         setCover({ file: null, preview: '' });
         setBlocks([{ id: Date.now(), type: 'text', content: '', invalid: false }]);
         setIsDeleteConfirmOpen(false);
@@ -278,10 +287,14 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
                 return b.content;
             }).join('\n\n');
 
+            // 4. 【关键】将 topped 传给请求模型
             const requestModel = new PostRequest({
                 title, category, tags, coverImage: coverData, contentImages, downloads,
-                content: mdContent, excerpt: blocks.find(b => b.type === 'text')?.content?.slice(0, 150) || ''
+                content: mdContent, excerpt: blocks.find(b => b.type === 'text')?.content?.slice(0, 150) || '',
+                // 只有管理员才能发送 topped 字段
+                topped: isAdmin ? topped : undefined,
             });
+
 
             let responseData;
             if (editSlug) {
@@ -351,6 +364,10 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
             isMetaDone={isMetaDone}
             isCoverDone={isCoverDone}
             isContentDone={isContentDone}
+             // 7. 传递新增的 props 给 Layout
+            isAdmin={isAdmin}
+            isTopped={topped}
+            setIsTopped={setTopped}
             insertBlock={insertBlock}
             moveBlock={moveBlock}
             updateBlock={updateBlock}

@@ -1,3 +1,5 @@
+// --- START OF FILE PostDetail.tsx ---
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +18,7 @@ const PostDetail: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   
-  const { token, user, isAuthenticated } = useAuth();
+  const { token, user, isAuthenticated } = useAuth(); // token is already here
   const { openWriteModal, openAuthModal } = useModal();
   const { setHideSidebars, setCustomBg } = useLayout();
   const commentRef = useRef<HTMLDivElement>(null);
@@ -30,10 +32,10 @@ const PostDetail: React.FC = () => {
     setLoading(true);
     setError(false);
     try {
+      // The `token` is passed to getPostById to fetch potential non-published posts if user has rights
       const data = await getPostById(id, token, true);
       if (data) {
         setPost(data);
-        console.log(data);
         if (data.coverImage?.src) setCustomBg(data.coverImage.src);
       } else {
         setPost(null); // Explicitly set to null if no data found
@@ -44,7 +46,7 @@ const PostDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, setCustomBg]);
+  }, [id, token, setCustomBg]); // Added token to dependency array
 
   useEffect(() => {
     setHideSidebars(true);
@@ -78,6 +80,7 @@ const PostDetail: React.FC = () => {
       post={post}
       isAuthenticated={isAuthenticated}
       user={user}
+      token={token} // <-- ** 这里是关键的改动 **
       openWriteModal={openWriteModal}
       openAuthModal={openAuthModal}
       onRefresh={fetchPostData}

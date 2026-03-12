@@ -1,3 +1,5 @@
+// --- START OF FILE RegisterForm.tsx ---
+
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { apiRegister, apiSendVerificationCode } from '../../utils/authApi';
 import { useNotification } from '../../context/NotificationContext';
@@ -61,10 +63,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchLogin, onSuccess })
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // 将 input 的 name 映射到 state 的 key
+    // 关键修改：将浏览器的 'username' 映射到后端的 'email' 状态
     const fieldMap: Record<string, string> = {
       nickname: 'nickname',
-      email: 'email',
+      username: 'email', // 将 name="username" 映射到 formData.email
       vcode: 'verificationCode',
       invite: 'invitationCode'
     };
@@ -75,13 +77,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchLogin, onSuccess })
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center dark:text-white">加入我们</h2>
-      <form onSubmit={handleRegister} className="space-y-4">
+      
+      {/* 关键修改：增加 method="POST" 和 action="#" */}
+      <form onSubmit={handleRegister} method="POST" action="#" className="space-y-4">
         <div className="relative">
           <User className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input 
             name="nickname"
             placeholder="用户昵称" 
             required 
+            autoComplete="nickname"
             className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
             onChange={handleChange} 
           />
@@ -89,10 +94,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchLogin, onSuccess })
 
         <div className="relative">
           <Mail className="absolute left-3 top-2.5 text-gray-400" size={18} />
+          {/* 关键修改：name和autoComplete改为username，以便浏览器与密码配对存储 */}
           <input 
-            name="email"
+            name="username"
             type="email" 
-            autoComplete="email"
+            autoComplete="username"
             placeholder="注册邮箱" 
             required 
             className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
@@ -105,6 +111,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchLogin, onSuccess })
             <ShieldCheck className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input 
               name="vcode"
+              autoComplete="one-time-code"
               placeholder="邮箱验证码" 
               required 
               className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 
@@ -134,6 +141,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchLogin, onSuccess })
           <Ticket className="absolute left-3 top-2.5 text-gray-400" size={18} />
           <input 
             name="invite"
+            autoComplete="off"
             placeholder="邀请码 (必填)" 
             required 
             className="w-full pl-10 pr-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500" 

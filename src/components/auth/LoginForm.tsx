@@ -1,3 +1,5 @@
+// --- START OF FILE LoginForm.tsx ---
+
 import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { apiLogin } from '../../utils/authApi';
@@ -23,14 +25,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { login } = useAuth();
   const { showNotification } = useNotification();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
       const data = await apiLogin({ email, password });
       login(data.user, data.token);
       showNotification(`欢迎回来，${data.user.nickname}`, 'success');
-      onSuccess();
+      
+      // 关键：给浏览器留出一点点响应时间来检测表单成功提交，然后再关闭弹窗
+      setTimeout(() => {
+        onSuccess();
+      }, 500);
     } catch (err: any) {
       showNotification(err.message || '登录失败', 'error');
     } finally {
@@ -44,7 +50,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">登录账号</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* 关键修改：增加 method="POST" 和 action="#" 唤醒浏览器密码管理器 */}
+      <form onSubmit={handleSubmit} method="POST" action="#" className="space-y-4">
         <div>
           <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             邮箱

@@ -1,3 +1,5 @@
+// --- START OF FILE PostRequest.ts ---
+
 export interface ICoverImage {
   src: string;
   alt?: string;
@@ -24,7 +26,7 @@ export class PostRequest {
   public coverImage: ICoverImage;
   public contentImages: IContentImage[];
   public downloads: IDownload[];
-  public topped: boolean;
+  public topped?: boolean; // 1. 改为可选
 
   constructor(data: Partial<PostRequest> = {}) {
     this.title = data.title || '';
@@ -50,11 +52,14 @@ export class PostRequest {
       url: dl.url || ''
     }));
 
-    this.topped = !!data.topped;
+    // 2. 只有明确传入布尔值时才赋值，否则保持 undefined
+    if (typeof data.topped === 'boolean') {
+        this.topped = data.topped;
+    }
   }
 
   toJSON() {
-    return {
+    const data: any = {
       title: this.title,
       content: this.content,
       excerpt: this.excerpt,
@@ -63,8 +68,14 @@ export class PostRequest {
       coverImage: this.coverImage,
       contentImages: this.contentImages,
       downloads: this.downloads,
-      topped: this.topped
     };
+
+    // 3. 只有当 topped 被定义时才发送该字段
+    if (this.topped !== undefined) {
+        data.topped = this.topped;
+    }
+
+    return data;
   }
 
   validate(): void {

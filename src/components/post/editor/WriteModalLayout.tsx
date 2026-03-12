@@ -1,8 +1,10 @@
+// --- START OF FILE WriteModalLayout.tsx ---
+
 import React, { useEffect, useRef } from 'react';
 import {
     X, Send, Loader2, Type,
     Image as ImageIcon, Trash2, ChevronUp,
-    ChevronDown, Link as LinkIcon, Heading as HeadingIcon, Eye, Edit3, Check
+    ChevronDown, Link as LinkIcon, Heading as HeadingIcon, Eye, Edit3, Check, Bookmark
 } from 'lucide-react';
 import anime from 'animejs';
 
@@ -40,6 +42,11 @@ interface WriteModalLayoutProps {
     isMetaDone: boolean;
     isCoverDone: boolean;
     isContentDone: boolean;
+    // --- 新增权限和置顶控制 ---
+    isAdmin: boolean;
+    isTopped: boolean;
+    setIsTopped: (val: boolean) => void;
+    // -----------------------
     insertBlock: (index: number, type: BlockType) => void;
     moveBlock: (index: number, direction: 'up' | 'down') => void;
     updateBlock: (id: number, field: keyof Block, value: any) => void;
@@ -67,6 +74,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
     isSelectOpen, setIsSelectOpen,
     isDeleteConfirmOpen, setIsDeleteConfirmOpen,
     isMetaDone, isCoverDone, isContentDone,
+    isAdmin, isTopped, setIsTopped, // 解构
     insertBlock, moveBlock, updateBlock, removeBlock,
     handleImageSelect, handleCoverSelect,
     handleTagKeyDown, handleNewCategoryKeyDown,
@@ -122,7 +130,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                     </div>
                 ) : (
                     <>
-                        {/* 顶部导航：减少了 padding (py-4) */}
+                        {/* 顶部导航 */}
                         <div className="px-8 py-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-white/50 dark:bg-black/20 flex-shrink-0">
                             <div className="flex items-center space-x-4">
                                 {steps.map(s => (
@@ -141,6 +149,21 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                 ))}
                             </div>
                             <div className="flex items-center space-x-3">
+                                {/* 置顶拉环按钮：仅管理员可见 */}
+                                {isAdmin && (
+                                    <button 
+                                        onClick={() => setIsTopped(!isTopped)}
+                                        className={`flex items-center px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
+                                            isTopped 
+                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 hover:border-red-400'
+                                        }`}
+                                    >
+                                        <Bookmark size={14} className={`mr-2 transition-all ${isTopped ? 'fill-red-600 scale-110' : ''}`} />
+                                        {isTopped ? '已置顶' : '设为置顶'}
+                                    </button>
+                                )}
+
                                 {editSlug && (
                                     <button 
                                         onClick={() => setIsDeleteConfirmOpen(true)}
@@ -156,13 +179,12 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                             </div>
                         </div>
 
-                        {/* 主内容区域：移除 EditorCloud，直接渲染，减少 padding */}
+                        {/* 主内容区域 */}
                         <div className="flex-1 overflow-y-auto px-8 sm:px-16 py-8 custom-scrollbar relative">
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
                                 
                                 {step === 1 && (
                                     <div className="space-y-8">
-                                        {/* 标题输入：缩小字体 text-3xl */}
                                         <EditorTextArea
                                             value={title}
                                             onChange={(v: string) => setTitle(v)}
@@ -234,7 +256,6 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                                                 placeholder="小标题"
                                                                 value={block.content}
                                                                 onChange={(v: string) => updateBlock(block.id, 'content', v)}
-                                                                // 修正字体大小：text-xl
                                                                 className="text-xl font-bold text-blue-600 border-l-4 border-blue-600 pl-4 py-2"
                                                             />
                                                         )}
@@ -243,7 +264,6 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                                                 placeholder="正文内容..." 
                                                                 value={block.content} 
                                                                 onChange={(v: string) => updateBlock(block.id, 'content', v)} 
-                                                                // 修正字体大小：text-base
                                                                 className="text-base leading-relaxed text-gray-700 dark:text-gray-300" 
                                                             />
                                                         )}
@@ -263,7 +283,6 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                                         )}
                                                     </EditorBlockWrapper>
 
-                                                    {/* 插入按钮条：更加紧凑 */}
                                                     <div className="relative h-8 group/ins flex items-center justify-center my-1">
                                                         <div className="w-full h-[1px] bg-gray-100 dark:bg-white/5 group-hover/ins:bg-blue-500/30 transition-all" />
                                                         <div className="absolute flex gap-2 opacity-0 group-hover/ins:opacity-100 transition-all scale-90 group-hover/ins:scale-100 bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-full p-1">
@@ -277,9 +296,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                             ))}
                                         </div>
                                     ) : (
-                                        // 预览模式：字体调整正常
                                         <div className="prose prose-lg dark:prose-invert max-w-none pb-20">
-                                            {/* 预览标题：缩小到 text-3xl */}
                                             <h1 className="text-3xl font-black mb-8 pb-4 border-b border-gray-100 dark:border-gray-800">{title}</h1>
                                             {blocks.map((b, idx) => {
                                                 const currentImgIdx = blocks.filter((item, i) => i <= idx && item.type === 'image').length;
@@ -287,9 +304,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
 
                                                 return (
                                                     <div key={b.id} className="mb-6">
-                                                        {/* 预览子标题：text-xl */}
                                                         {b.type === 'heading' && b.content && <h3 className="text-xl font-bold mt-8 mb-4">{b.content}</h3>}
-                                                        {/* 预览文本：text-base */}
                                                         {b.type === 'text' && b.content && <p className="text-base leading-7 text-gray-600 dark:text-gray-300">{b.content}</p>}
                                                         {b.type === 'image' && b.previewUrl && (
                                                             <figure className="flex flex-col items-center my-6">
@@ -319,7 +334,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                             </div>
                         </div>
 
-                        {/* 底部导航：减少了 padding (py-6) */}
+                        {/* 底部导航 */}
                         <div className="px-8 py-6 bg-white/80 dark:bg-black/40 border-t border-gray-100 dark:border-white/5 flex items-center justify-between flex-shrink-0 backdrop-blur-md">
                             <button onClick={() => setStep(prev => Math.max(1, prev - 1))} disabled={step === 1} className="flex items-center gap-2 font-bold text-gray-400 hover:text-blue-500 text-xs disabled:opacity-0 transition-all"><ChevronUp size={20} /> <span>上一步</span></button>
                             <div className="flex gap-3">{[1, 2, 3].map(i => (<div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${step === i ? 'bg-blue-600 w-8' : 'bg-gray-200 dark:bg-gray-700 w-2'}`} />))}</div>

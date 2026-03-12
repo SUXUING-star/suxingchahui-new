@@ -1,8 +1,11 @@
+// --- START OF FILE PostLayout.tsx ---
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit3, MessageCircle, Folder, Image as ImageIcon } from 'lucide-react';
+import { Edit3, MessageCircle, Folder, Image as ImageIcon, Bookmark } from 'lucide-react';
 import { PostResponse, Comment } from '../../../models/PostResponse';
 import { IUser } from '../../../models/User';
+import { apiTogglePostPin } from '../../../utils/postApi'; // 引入 API 函数
 
 import LazyImage from '../../common/LazyImage';
 import UserBadge from '../../common/UserBadge';
@@ -17,6 +20,7 @@ interface PostLayoutProps {
   post: PostResponse;
   isAuthenticated: boolean;
   user: IUser | null;
+  token: string | null; // 接收 token
   openWriteModal: (slug: string, onRefresh: () => void) => void;
   openAuthModal: () => void;
   onRefresh: () => void;
@@ -27,12 +31,31 @@ const PostLayout: React.FC<PostLayoutProps> = ({
   post,
   isAuthenticated,
   user,
+  token, // 解构 token
   openWriteModal,
   openAuthModal,
   onRefresh,
   commentRef
 }) => {
   const isOwnerOrAdmin = isAuthenticated && user && (user.isAdmin || user.id === post.author?.id);
+  const isAdmin = isAuthenticated && user && user.isAdmin;
+  const [isPinning, setIsPinning] = useState(false); // 用于处理置顶操作的 loading 状态
+
+  // 处理切换置顶状态的函数
+  const handleTogglePin = async () => {
+    if (!isAdmin || !token || isPinning) return;
+    setIsPinning(true);
+    try {
+      await apiTogglePostPin(post.slug, !post.topped, token);
+      onRefresh(); // 操作成功后，调用父组件的刷新函数以获取最新文章状态
+    } catch (error) {
+      console.error("Failed to toggle pin status", error);
+      alert('置顶操作失败，请检查网络或联系管理员。');
+    } finally {
+      setIsPinning(false);
+    }
+  };
+
   const recentComments = (post.comments || []).slice(0, 2);
 
   const getTotalCommentsCount = (comments: Comment[]): number => {
@@ -47,11 +70,9 @@ const PostLayout: React.FC<PostLayoutProps> = ({
     year: 'numeric', month: '2-digit', day: '2-digit'
   });
 
-  // 1. 在这里直接计算标题，数据流向：Post -> Layout -> TOC。不依赖 Render 组件
   const headings = useMemo(() => extractHeadings(post.content), [post.content]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
 
-  // 2. 滚动监听逻辑
   useEffect(() => {
     if (headings.length === 0) return;
 
@@ -63,7 +84,6 @@ const PostLayout: React.FC<PostLayoutProps> = ({
           }
         });
       },
-      // 触发区域：视口顶部的 33% 处
       { rootMargin: '-33% 0px -66% 0px' }
     );
 
@@ -73,14 +93,14 @@ const PostLayout: React.FC<PostLayoutProps> = ({
     return () => {
       headingElements.forEach(el => observer.unobserve(el!));
     };
-  }, [headings]); // 依赖于 headings 变化
+  }, [headings]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 relative">
       <BackButton to="/" />
       <BackToTop />
 
-      {/* 悬浮按钮保持不变 */}
+      {/* 评论悬浮按钮 */}
       <button
         onClick={() => commentRef.current?.scrollIntoView({ behavior: 'smooth' })}
         className="fixed bottom-32 left-10 sm:bottom-12 sm:left-auto sm:right-32 w-14 h-14 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col items-center justify-center border border-white/20 z-[90] hover:scale-110 active:scale-95 transition-all group"
@@ -89,7 +109,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
         <span className="text-[9px] font-black mt-1 text-gray-400">{totalComments}</span>
       </button>
 
-      {/* 新增：编辑悬浮按钮 */}
+      {/* 编辑悬浮按钮 */}
       {isOwnerOrAdmin && (
         <button
           onClick={() => openWriteModal(post.slug, onRefresh)}
@@ -101,10 +121,25 @@ const PostLayout: React.FC<PostLayoutProps> = ({
         </button>
       )}
 
+      {/* 新增：置顶/取消置顶悬浮按钮 (仅管理员可见) */}
+      {isAdmin && (
+        <button
+          onClick={handleTogglePin}
+          disabled={isPinning}
+          className="fixed bottom-64 left-10 sm:bottom-44 sm:left-auto sm:right-32 w-14 h-14 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col items-center justify-center border border-white/20 z-[90] hover:scale-110 active:scale-95 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label={post.topped ? '取消置顶' : '置顶文章'}
+        >
+          <Bookmark size={20} className={post.topped ? "text-red-500 fill-red-500/50" : "text-red-500"} />
+          <span className="text-[9px] font-black mt-1 text-gray-400">
+            {isPinning ? '处理中' : (post.topped ? '已置顶' : '置顶')}
+          </span>
+        </button>
+      )}
+
       {/* 整体大容器 */}
       <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start">
 
-        {/* 左侧栏：在 lg 屏时缩小宽度从 320 -> 260，xl 恢复 320 */}
+        {/* 左侧栏 */}
         <aside className="w-full lg:w-[260px] xl:w-[320px] flex-shrink-0 lg:sticky lg:top-10 space-y-4">
           <div className="bg-white/80 dark:bg-gray-900/85 backdrop-blur-3xl rounded-[32px] shadow-2xl border border-white/30 dark:border-white/5 overflow-hidden">
             <div className="aspect-[16/10] w-full bg-black/5 flex items-center justify-center">
@@ -158,11 +193,6 @@ const PostLayout: React.FC<PostLayoutProps> = ({
           {/* 主文章内容 */}
           <div className="flex-1 w-full space-y-8 min-w-0">
             <article className="bg-white/80 dark:bg-gray-900/85 backdrop-blur-3xl rounded-[40px] xl:rounded-[48px] shadow-2xl border border-white/30 dark:border-white/5 p-6 sm:py-12 sm:px-12 xl:py-16 xl:px-20">
-              {/* 
-                 注意这里的 padding: 
-                 sm:px-12 (默认和窄屏)
-                 xl:px-20 (宽屏才恢复大间距) 
-              */}
               <main>
                 <ContentRenderer
                   content={post.content}
@@ -187,7 +217,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
             </div>
           </div>
 
-          {/* 右侧 TOC：改为 lg:block，即 1024px 就显示 */}
+          {/* 右侧 TOC */}
           {headings.length > 0 && (
             <aside className="w-52 xl:w-64 flex-shrink-0 hidden lg:block sticky top-10 xl:top-28">
               <TableOfContents headings={headings} activeId={activeHeadingId} />

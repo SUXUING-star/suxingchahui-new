@@ -51,6 +51,15 @@ export const apiCreatePost = (postRequest: PostRequest, token: string): Promise<
   return apiPost('/posts', postRequest.toJSON(), token);
 }
 export const apiUpdatePost = (slug: string, postRequest: PostRequest, token: string): Promise<any> => apiPut(`/posts/${slug}`, postRequest.toJSON(), token);
+/**
+ * 新增：切换文章置顶状态
+ * @param slug - 文章的 slug
+ * @param topped - 目标置顶状态 (true: 置顶, false: 取消置顶)
+ * @param token - 用户认证 token
+ */
+export const apiTogglePostPin = (slug: string, topped: boolean, token: string): Promise<{ success: boolean; topped: boolean }> => 
+  apiPut(`/posts/${slug}`, { topped }, token);
+
 export const apiDeletePost = (slug: string, token: string): Promise<any> => apiDelete(`/posts/${slug}`, token);
 export const apiPostComment = (data: any, token: string): Promise<any> => apiPost('/posts/comment', data, token);
 export const apiReviewPost = (postId: string, action: 'approve' | 'reject', token: string): Promise<any> => apiPost('/admin/review', { postId, action }, token);
