@@ -44,63 +44,47 @@ const RightSidebar: React.FC = () => {
     }
   }, [isLoading, tagData]);
 
-  if (isLoading) return (
-    <aside className="py-4 w-[clamp(200px,20vw,320px)] transition-all duration-300">
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[24px] xl:rounded-[32px] p-4 xl:p-6 animate-pulse h-64"></div>
+ if (isLoading) return (
+    <aside className="py-4 w-[clamp(180px,20vw,250px)] transition-all duration-300">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[24px] p-4 animate-pulse h-64"></div>
     </aside>
   );
 
   return (
     <aside 
-      // 核心改动：用动态宽度彻底代替写死的固定宽度
       className={`py-4 transition-all duration-500 ease-in-out opacity-0 ${
-        isExpanded ? 'w-[clamp(200px,20vw,320px)]' : 'w-16 xl:w-20'
+        isExpanded ? 'w-[clamp(180px,20vw,250px)]' : 'w-16'
       }`} 
       ref={sidebarRef}
     >
       <div className={`bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl shadow-xl border border-white/40 dark:border-white/5 transition-all duration-500 overflow-hidden flex flex-col ${
-        isExpanded ? 'rounded-[24px] xl:rounded-[32px] p-4 xl:p-6' : 'rounded-[20px] xl:rounded-[24px] p-3 items-center'
+        isExpanded ? 'rounded-[24px] p-4' : 'rounded-[20px] p-3 items-center'
       }`}>
         
-        <div className={`flex items-center ${isExpanded ? 'justify-between mb-5 xl:mb-6' : 'justify-center flex-col space-y-4'}`}>
+        <div className={`flex items-center ${isExpanded ? 'justify-between mb-4' : 'justify-center flex-col space-y-4'}`}>
           {isExpanded && (
-            <h2 className="text-lg xl:text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
-              <Hash size={20} className="text-blue-500 mr-2 flex-shrink-0" /> 标签索引
+            <h2 className="text-base xl:text-lg font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+              <Hash size={18} className="text-blue-500 mr-1.5 flex-shrink-0" /> 标签索引
             </h2>
           )}
           
           <button 
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2.5 bg-gray-50/80 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-500 hover:text-blue-500 rounded-2xl transition-all active:scale-95 shadow-sm border border-gray-100 dark:border-white/5"
-            title={isExpanded ? "收起面板" : "展开标签索引"}
+            className="p-2 bg-gray-50/80 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 rounded-xl transition-all active:scale-95 border border-gray-100 dark:border-white/5"
           >
-            {isExpanded ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+            {isExpanded ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
           </button>
-
-          {!isExpanded && (
-            <div 
-              className="flex flex-col items-center justify-center pt-4 opacity-100 transition-opacity duration-300 delay-200 cursor-pointer"
-              onClick={() => setIsExpanded(true)}
-            >
-              <Hash size={14} className="text-blue-500/60 mb-3" />
-              <span 
-                className="text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-500 transition-colors" 
-                style={{ writingMode: 'vertical-rl' }}
-              >
-                探索标签云
-              </span>
-            </div>
-          )}
         </div>
         
         <div className={`transition-all duration-500 ease-in-out origin-top ${
           isExpanded ? 'opacity-100 max-h-[1000px] scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'
         }`}>
           {tagData.length === 0 ? (
-            <div className="py-10 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[24px]">
+            <div className="py-10 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[20px]">
                <p className="text-[10px] font-black text-gray-400 uppercase">无活跃标签</p>
             </div>
           ) : (
+            // TagCloud 内部可能也需要根据父容器宽度自适应，这里保持调用
             <TagCloud tagData={tagData} />
           )}
         </div>
