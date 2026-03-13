@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LazyImage from './LazyImage';
 import UserBadge from './UserBadge';
-import { Clock, Folder, Eye, Tag } from 'lucide-react'; // 新增 Tag 图标
+import { Clock, Folder, Eye, Tag, MessageCircle } from 'lucide-react'; // 新增 Tag 图标
 import { PostResponse } from '@/models/PostResponse';
 
 interface PostCardProps {
@@ -70,14 +70,22 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
               <UserBadge user={post.author} size="sm" />
             </div>
             
+            {/* 紧凑的数据展示区 */}
             <div className="flex items-center space-x-1.5 sm:space-x-2">
+                {/* 评论数 */}
                 <div className="flex items-center text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest opacity-80">
-                    <Clock size={8} className="mr-0.5 sm:mr-1 text-blue-500" />
-                    {post.getFormattedDate()}
+                    <MessageCircle size={8} className="mr-0.5 sm:mr-1 text-purple-500" />
+                    {post.commentsCount}
                 </div>
+                {/* 浏览量 */}
                 <div className="flex items-center text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest opacity-80">
                     <Eye size={8} className="mr-0.5 sm:mr-1 text-emerald-500" />
                     {post.views}
+                </div>
+                {/* 时间 (仅在 sm 以上显示以节省空间) */}
+                <div className="hidden xs:flex items-center text-[7px] sm:text-[8px] font-black text-gray-400 uppercase tracking-widest opacity-80">
+                    <Clock size={8} className="mr-0.5 sm:mr-1 text-blue-500" />
+                    {post.getFormattedDate()}
                 </div>
             </div>
           </div>

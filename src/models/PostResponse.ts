@@ -42,6 +42,7 @@ export class PostResponse {
   public createTime: string;
   public updateTime: string;
   public views: number;
+  public commentsCount: number; 
   public status: string;
   public topped: boolean;
   public excerpt: string;
@@ -89,6 +90,7 @@ export class PostResponse {
     this.comments = Array.isArray(raw.comments) 
       ? raw.comments.map((c: any) => new Comment(c)) 
       : [];
+    this.commentsCount = raw.commentsCount || (Array.isArray(raw.comments) ? raw.comments.length : 0);
   }
 
   getFormattedDate(): string {
