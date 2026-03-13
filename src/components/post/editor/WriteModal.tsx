@@ -305,13 +305,9 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
 
             const finalStatus = responseData.status;
 
-            if (finalStatus === 'published') {
-                showNotification('星火已点燃：文章已实时发布', 'success', '全站同步');
-            } else if (finalStatus === 'pending') {
-                showNotification('已送入审核：由于权限变更，内容需重新审批', 'success', '审核队列');
-            } else {
-                showNotification('状态异常，请联系管理员', 'error');
-            }
+            
+            showNotification('文章已发布（会经过审核）', 'success', '感谢支持');
+           
 
             if (onWriteSuccess) onWriteSuccess();
             onClose();
