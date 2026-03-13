@@ -14,7 +14,7 @@ interface TagCloudItem {
 const RightSidebar: React.FC = () => {
   const [tagData, setTagData] = useState<TagCloudItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isExpanded, setIsExpanded] = useState<boolean>(true); // 控制展开/收缩状态
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -45,26 +45,26 @@ const RightSidebar: React.FC = () => {
   }, [isLoading, tagData]);
 
   if (isLoading) return (
-    <aside className="p-4 w-64 xl:w-80 transition-all duration-300">
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[32px] p-6 animate-pulse h-64"></div>
+    <aside className="py-4 w-[clamp(200px,20vw,320px)] transition-all duration-300">
+      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[24px] xl:rounded-[32px] p-4 xl:p-6 animate-pulse h-64"></div>
     </aside>
   );
 
   return (
     <aside 
-      className={`p-4 transition-all duration-500 ease-in-out opacity-0 ${
-        isExpanded ? 'w-64 xl:w-80' : 'w-24'
+      // 核心改动：用动态宽度彻底代替写死的固定宽度
+      className={`py-4 transition-all duration-500 ease-in-out opacity-0 ${
+        isExpanded ? 'w-[clamp(200px,20vw,320px)]' : 'w-16 xl:w-20'
       }`} 
       ref={sidebarRef}
     >
       <div className={`bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl shadow-xl border border-white/40 dark:border-white/5 transition-all duration-500 overflow-hidden flex flex-col ${
-        isExpanded ? 'rounded-[32px] p-6' : 'rounded-[28px] p-4 items-center'
+        isExpanded ? 'rounded-[24px] xl:rounded-[32px] p-4 xl:p-6' : 'rounded-[20px] xl:rounded-[24px] p-3 items-center'
       }`}>
         
-        {/* 顶部标题区 & 切换按钮 */}
-        <div className={`flex items-center ${isExpanded ? 'justify-between mb-6' : 'justify-center flex-col space-y-4'}`}>
+        <div className={`flex items-center ${isExpanded ? 'justify-between mb-5 xl:mb-6' : 'justify-center flex-col space-y-4'}`}>
           {isExpanded && (
-            <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+            <h2 className="text-lg xl:text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
               <Hash size={20} className="text-blue-500 mr-2 flex-shrink-0" /> 标签索引
             </h2>
           )}
@@ -77,7 +77,6 @@ const RightSidebar: React.FC = () => {
             {isExpanded ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
           </button>
 
-          {/* 收起状态下：显示竖排文字提示 */}
           {!isExpanded && (
             <div 
               className="flex flex-col items-center justify-center pt-4 opacity-100 transition-opacity duration-300 delay-200 cursor-pointer"
@@ -94,7 +93,6 @@ const RightSidebar: React.FC = () => {
           )}
         </div>
         
-        {/* 内容区 */}
         <div className={`transition-all duration-500 ease-in-out origin-top ${
           isExpanded ? 'opacity-100 max-h-[1000px] scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'
         }`}>

@@ -12,7 +12,7 @@ import { PostResponse } from '../../models/PostResponse';
 const LeftSidebar: React.FC = () => {
   const [recentPosts, setRecentPosts] = useState<PostResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isExpanded, setIsExpanded] = useState<boolean>(true); // 控制展开/收缩状态
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const sidebarRef = useRef<HTMLElement>(null);
   
   useEffect(() => {
@@ -44,12 +44,13 @@ const LeftSidebar: React.FC = () => {
 
   if (isLoading) {
     return (
-      <aside className="p-4 w-64 xl:w-80 transition-all duration-300">
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[32px] p-6 space-y-6 animate-pulse">
+      // 骨架屏也同步使用流体宽度
+      <aside className="py-4 w-[clamp(200px,20vw,320px)] transition-all duration-300">
+        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[24px] xl:rounded-[32px] p-4 xl:p-6 space-y-6 animate-pulse">
           <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6"></div>
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex gap-4">
-              <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-2xl flex-shrink-0"></div>
+              <div className="w-14 h-14 bg-gray-200 dark:bg-gray-700 rounded-2xl flex-shrink-0"></div>
               <div className="flex-1 space-y-3 py-1">
                 <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
                 <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -63,19 +64,20 @@ const LeftSidebar: React.FC = () => {
 
   return (
     <aside 
-      className={`p-4 transition-all duration-500 ease-in-out opacity-0 ${
-        isExpanded ? 'w-64 xl:w-80' : 'w-24'
+      // 核心改动：w-[clamp(200px,20vw,320px)]
+      className={`py-4 transition-all duration-500 ease-in-out opacity-0 ${
+        isExpanded ? 'w-[clamp(200px,20vw,320px)]' : 'w-16 xl:w-20'
       }`} 
       ref={sidebarRef}
     >
+      {/* 调整 Padding: p-4 xl:p-6 保证内部不被挤压变形 */}
       <div className={`bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl shadow-xl border border-white/40 dark:border-white/5 transition-all duration-500 overflow-hidden flex flex-col ${
-        isExpanded ? 'rounded-[32px] p-6' : 'rounded-[28px] p-4 items-center'
+        isExpanded ? 'rounded-[24px] xl:rounded-[32px] p-4 xl:p-6' : 'rounded-[20px] xl:rounded-[24px] p-3 items-center'
       }`}>
           
-          {/* 顶部控制区 & 标题 */}
-          <div className={`flex items-center ${isExpanded ? 'justify-between mb-6' : 'justify-center flex-col space-y-4'}`}>
+          <div className={`flex items-center ${isExpanded ? 'justify-between mb-5 xl:mb-6' : 'justify-center flex-col space-y-4'}`}>
             {isExpanded && (
-              <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter whitespace-nowrap overflow-hidden">
+              <h2 className="text-lg xl:text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter whitespace-nowrap overflow-hidden">
                 <Zap size={20} className="text-amber-500 mr-2 flex-shrink-0" />
                 最新同步
               </h2>
@@ -89,7 +91,6 @@ const LeftSidebar: React.FC = () => {
               {isExpanded ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
             </button>
 
-            {/* 收缩时的竖排文字提示 */}
             {!isExpanded && (
               <div 
                 className="flex flex-col items-center justify-center pt-4 opacity-100 transition-opacity duration-300 delay-200 cursor-pointer"
@@ -106,7 +107,6 @@ const LeftSidebar: React.FC = () => {
             )}
           </div>
             
-          {/* 隐藏/显示的主内容列表 */}
           <div className={`transition-all duration-500 ease-in-out origin-top ${
             isExpanded ? 'opacity-100 max-h-[1000px] scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'
           }`}>
@@ -115,22 +115,25 @@ const LeftSidebar: React.FC = () => {
                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">无信号</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4 xl:space-y-6">
                 {recentPosts.map(post => (
-                  <article key={post.id} className="group flex gap-4 transition-all active:scale-95">
+                  <article key={post.id} className="group flex gap-3 xl:gap-4 transition-all active:scale-95">
                     {post.coverImage?.src && (
                       <Link to={`/post/${post.id}`} className="flex-shrink-0">
-                        <LazyImage src={post.coverImage.src} alt={post.title} wrapperClassName="w-16 h-16 rounded-2xl shadow-sm group-hover:shadow-lg transition-all overflow-hidden" />
+                        {/* 图片略调以适应更紧凑流体宽度 */}
+                        <LazyImage src={post.coverImage.src} alt={post.title} wrapperClassName="w-14 h-14 xl:w-16 xl:h-16 rounded-2xl shadow-sm group-hover:shadow-lg transition-all overflow-hidden" />
                       </Link>
                     )}
                     <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
                       <Link to={`/post/${post.id}`}>
-                        <h3 className="text-[13px] font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-500 transition-colors line-clamp-2 leading-tight">
+                        <h3 className="text-[12px] xl:text-[13px] font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-500 transition-colors line-clamp-2 leading-tight">
                           {post.title}
                         </h3>
                       </Link>
                       <div className="flex items-center justify-between mt-auto">
-                        <UserBadge user={post.author} size="sm" className="scale-75 origin-left opacity-80" />
+                        <div className="scale-75 origin-left opacity-80">
+                           <UserBadge user={post.author} size="sm" />
+                        </div>
                         <time className="text-[8px] font-black text-gray-400 uppercase italic">
                             {post.getFormattedDate()}
                         </time>
@@ -141,7 +144,6 @@ const LeftSidebar: React.FC = () => {
               </div>
             )}
           </div>
-
       </div>
     </aside>
   );
