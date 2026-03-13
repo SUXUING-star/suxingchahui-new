@@ -1,6 +1,8 @@
+// --- START OF FILE LeftSidebar.tsx ---
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Zap, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { getRecentPosts } from '../../utils/postApi';
 import anime from 'animejs';
 import UserBadge from '../common/UserBadge';
@@ -10,6 +12,7 @@ import { PostResponse } from '../../models/PostResponse';
 const LeftSidebar: React.FC = () => {
   const [recentPosts, setRecentPosts] = useState<PostResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true); // 控制展开/收缩状态
   const sidebarRef = useRef<HTMLElement>(null);
   
   useEffect(() => {
@@ -41,7 +44,7 @@ const LeftSidebar: React.FC = () => {
 
   if (isLoading) {
     return (
-      <aside className="w-full p-4">
+      <aside className="p-4 w-64 xl:w-80 transition-all duration-300">
         <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-[32px] p-6 space-y-6 animate-pulse">
           <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6"></div>
           {[...Array(5)].map((_, i) => (
@@ -59,14 +62,54 @@ const LeftSidebar: React.FC = () => {
   }
 
   return (
-    <aside className="w-full p-4 opacity-0" ref={sidebarRef}>
-      <div className="bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[32px] p-6 shadow-xl border border-white/40 dark:border-white/5">
-          <section>
-            <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center mb-6 tracking-tighter">
-              <Zap size={20} className="text-amber-500 mr-2" />
-              最新同步
-            </h2>
+    <aside 
+      className={`p-4 transition-all duration-500 ease-in-out opacity-0 ${
+        isExpanded ? 'w-64 xl:w-80' : 'w-24'
+      }`} 
+      ref={sidebarRef}
+    >
+      <div className={`bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl shadow-xl border border-white/40 dark:border-white/5 transition-all duration-500 overflow-hidden flex flex-col ${
+        isExpanded ? 'rounded-[32px] p-6' : 'rounded-[28px] p-4 items-center'
+      }`}>
+          
+          {/* 顶部控制区 & 标题 */}
+          <div className={`flex items-center ${isExpanded ? 'justify-between mb-6' : 'justify-center flex-col space-y-4'}`}>
+            {isExpanded && (
+              <h2 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter whitespace-nowrap overflow-hidden">
+                <Zap size={20} className="text-amber-500 mr-2 flex-shrink-0" />
+                最新同步
+              </h2>
+            )}
+
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2.5 bg-gray-50/80 dark:bg-gray-800/50 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-gray-500 hover:text-amber-500 rounded-2xl transition-all active:scale-95 shadow-sm border border-gray-100 dark:border-white/5"
+              title={isExpanded ? "收起面板" : "展开最新同步"}
+            >
+              {isExpanded ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+            </button>
+
+            {/* 收缩时的竖排文字提示 */}
+            {!isExpanded && (
+              <div 
+                className="flex flex-col items-center justify-center pt-4 opacity-100 transition-opacity duration-300 delay-200 cursor-pointer"
+                onClick={() => setIsExpanded(true)}
+              >
+                <Zap size={14} className="text-amber-500/60 mb-3" />
+                <span 
+                  className="text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-amber-500 transition-colors" 
+                  style={{ writingMode: 'vertical-rl' }}
+                >
+                  最新同步
+                </span>
+              </div>
+            )}
+          </div>
             
+          {/* 隐藏/显示的主内容列表 */}
+          <div className={`transition-all duration-500 ease-in-out origin-top ${
+            isExpanded ? 'opacity-100 max-h-[1000px] scale-y-100' : 'opacity-0 max-h-0 scale-y-95 pointer-events-none'
+          }`}>
             {!isLoading && recentPosts.length === 0 ? (
               <div className="py-10 text-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[24px]">
                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">无信号</p>
@@ -82,7 +125,7 @@ const LeftSidebar: React.FC = () => {
                     )}
                     <div className="flex flex-col justify-between flex-1 min-w-0 py-0.5">
                       <Link to={`/post/${post.id}`}>
-                        <h3 className="text-[13px] font-black text-gray-800 dark:text-gray-200 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
+                        <h3 className="text-[13px] font-black text-gray-800 dark:text-gray-200 group-hover:text-amber-500 transition-colors line-clamp-2 leading-tight">
                           {post.title}
                         </h3>
                       </Link>
@@ -97,7 +140,8 @@ const LeftSidebar: React.FC = () => {
                 ))}
               </div>
             )}
-          </section>
+          </div>
+
       </div>
     </aside>
   );

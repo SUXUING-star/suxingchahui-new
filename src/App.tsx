@@ -36,8 +36,9 @@ const AppLayout = () => {
       <div className="flex flex-col min-h-screen">
         <div className="flex-1 flex w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 gap-4">
           
+          {/* 左侧栏：移除 w-64 xl:w-80，让 LeftSidebar 自身控制宽度 */}
           {!hideSidebars && (
-            <div className="hidden min-[850px]:block w-64 xl:w-80 flex-shrink-0 relative">
+            <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">
                 <LeftSidebar />
               </div>
@@ -64,7 +65,7 @@ const AppLayout = () => {
             <Footer />
           </div>
 
-          {/* 移除固定宽度 w-64 xl:w-80，让子组件 RightSidebar 自己控制宽度 */}
+          {/* 右侧栏 */}
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">
