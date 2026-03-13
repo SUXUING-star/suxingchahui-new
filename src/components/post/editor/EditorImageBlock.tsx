@@ -1,5 +1,5 @@
-import React, { useRef, ChangeEvent } from 'react';
-import { UploadCloud, X, RefreshCw } from 'lucide-react';
+import React, { useRef, ChangeEvent, useState } from 'react';
+import { UploadCloud, X, RefreshCw, Upload } from 'lucide-react';
 
 interface EditorImageBlockProps {
   previewUrl?: string;
@@ -9,11 +9,33 @@ interface EditorImageBlockProps {
 
 const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelect, onRemove }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleClick = () => {
-    // 只有在没有预览图时，整个区域才能点击上传
-    if (!previewUrl) {
-      fileInputRef.current?.click();
+    if (!previewUrl) fileInputRef.current?.click();
+  };
+
+  // --- 拖拽逻辑 ---
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!previewUrl) setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (previewUrl) return;
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const fakeEvent = {
+        target: { files }
+      } as unknown as ChangeEvent<HTMLInputElement>;
+      onSelect(fakeEvent);
     }
   };
 
@@ -45,17 +67,24 @@ const EditorImageBlock: React.FC<EditorImageBlockProps> = ({ previewUrl, onSelec
       ) : (
         <div 
           onClick={handleClick}
-          className="w-full py-12 px-6 rounded-[32px] border-4 border-dashed border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-400 bg-white/40 dark:bg-black/20 backdrop-blur-md flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-white/60 group/btn"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`w-full py-12 px-6 rounded-[32px] border-4 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer backdrop-blur-md ${
+            isDragging 
+              ? 'border-solid border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 scale-[1.01]' 
+              : 'border-dashed border-gray-100 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-400 bg-white/40 dark:bg-black/20 hover:bg-white/60'
+          }`}
         >
-          <div className="w-20 h-20 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl flex items-center justify-center mb-6 group-hover/btn:scale-110 group-hover/btn:rotate-3 transition-all duration-500">
-            <UploadCloud size={40} className="text-blue-500" />
+          <div className={`w-20 h-20 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl flex items-center justify-center mb-6 transition-all duration-500 ${isDragging ? 'scale-125 rotate-12 bg-blue-500 text-white' : 'group-hover/img:scale-110'}`}>
+            {isDragging ? <Upload size={40} className="text-white animate-bounce" /> : <UploadCloud size={40} className="text-blue-500" />}
           </div>
-          <div className="text-center space-y-1">
-            <p className="text-lg font-black text-gray-900 dark:text-white tracking-tighter uppercase">
-              插入图片
+          <div className="text-center space-y-1 pointer-events-none">
+            <p className={`text-lg font-black tracking-tighter uppercase transition-colors ${isDragging ? 'text-blue-600' : 'text-gray-900 dark:text-white'}`}>
+              {isDragging ? '放置以上传' : '插入图片'}
             </p>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
-              支持 JPG, PNG, WEBP
+              支持拖拽或点击上传
             </p>
           </div>
         </div>
