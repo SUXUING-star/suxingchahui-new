@@ -141,7 +141,7 @@ const Home: React.FC = () => {
             <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(37,99,235,1)]"></div>
             <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">置顶星火</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 justify-items-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
             {pinnedPosts.map(post => <PostCard key={post.id} post={post} />)}
           </div>
         </section>
@@ -152,8 +152,10 @@ const Home: React.FC = () => {
           <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
           <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">最新同步</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 justify-items-center">
-          {posts.map(post => <PostCard key={post.id} post={post} />)}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
+          {posts.map(post => (
+            <PostCard key={post.id} post={post} />
+          ))}
         </div>
 
         {totalPages > 1 && (

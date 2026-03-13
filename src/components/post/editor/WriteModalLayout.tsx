@@ -15,6 +15,7 @@ import EditorCover from './EditorCover';
 import EditorBlockWrapper from './EditorBlockWrapper';
 import ConfirmModal from '../../common/ConfirmModal';
 import { Block, BlockType } from './WriteModal';
+import EditorStepContent from './EditorStepContent';
 
 interface WriteModalLayoutProps {
     onClose: () => void;
@@ -118,7 +119,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
             {/* 点击背景也要触发退出动画 */}
             <div className="absolute inset-0 bg-white/10 dark:bg-black/40 backdrop-blur-[50px]" onClick={handleClose} />
 
-            <div 
+            <div
                 ref={modalRef}
                 className="modal-canvas relative w-full max-w-6xl h-full max-h-[95vh] flex flex-col bg-white/95 dark:bg-gray-900/95 backdrop-blur-3xl rounded-[32px] shadow-2xl border border-white/40 dark:border-white/5 overflow-hidden opacity-0"
             >
@@ -134,14 +135,13 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                         <div className="px-8 py-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-white/50 dark:bg-black/20 flex-shrink-0">
                             <div className="flex items-center space-x-4">
                                 {steps.map(s => (
-                                    <button 
+                                    <button
                                         key={s.id}
                                         onClick={() => setStep(s.id)}
                                         className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-all ${step === s.id ? 'bg-blue-50 dark:bg-blue-900/30' : 'hover:bg-gray-50 dark:hover:bg-white/5'}`}
                                     >
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all ${
-                                            s.isDone ? 'bg-green-500 text-white' : (step === s.id ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500')
-                                        }`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-sm transition-all ${s.isDone ? 'bg-green-500 text-white' : (step === s.id ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500')
+                                            }`}>
                                             {s.isDone && step !== s.id ? <Check size={14} strokeWidth={3} /> : s.id}
                                         </div>
                                         <span className={`font-bold text-xs ${step === s.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}>{s.title}</span>
@@ -151,13 +151,12 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                             <div className="flex items-center space-x-3">
                                 {/* 置顶拉环按钮：仅管理员可见 */}
                                 {isAdmin && (
-                                    <button 
+                                    <button
                                         onClick={() => setIsTopped(!isTopped)}
-                                        className={`flex items-center px-4 py-2 rounded-xl font-bold text-xs transition-all border ${
-                                            isTopped 
-                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
-                                            : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 hover:border-red-400'
-                                        }`}
+                                        className={`flex items-center px-4 py-2 rounded-xl font-bold text-xs transition-all border ${isTopped
+                                                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-200 dark:border-red-800 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                                : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700 hover:border-red-400'
+                                            }`}
                                     >
                                         <Bookmark size={14} className={`mr-2 transition-all ${isTopped ? 'fill-red-600 scale-110' : ''}`} />
                                         {isTopped ? '已置顶' : '设为置顶'}
@@ -165,7 +164,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                 )}
 
                                 {editSlug && (
-                                    <button 
+                                    <button
                                         onClick={() => setIsDeleteConfirmOpen(true)}
                                         className="flex items-center px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 font-bold text-xs hover:bg-red-500 hover:text-white transition-all"
                                     >
@@ -182,7 +181,7 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                         {/* 主内容区域 */}
                         <div className="flex-1 overflow-y-auto px-8 sm:px-16 py-8 custom-scrollbar relative">
                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-5xl mx-auto">
-                                
+
                                 {step === 1 && (
                                     <div className="space-y-8">
                                         <EditorTextArea
@@ -204,10 +203,10 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                                             {allCategories.map(c => <button key={c} onClick={() => { setCategory(c); setIsSelectOpen(false); }} className="w-full p-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-left font-bold text-sm dark:text-gray-200">{c}</button>)}
                                                         </div>
                                                         <div className="p-2 border-t border-gray-100 dark:border-white/5">
-                                                            <input 
-                                                                placeholder="输入新分类回车..." 
-                                                                className="w-full p-2 bg-gray-50 dark:bg-gray-900 rounded-lg outline-none dark:text-white font-bold text-xs" 
-                                                                onKeyDown={handleNewCategoryKeyDown} 
+                                                            <input
+                                                                placeholder="输入新分类回车..."
+                                                                className="w-full p-2 bg-gray-50 dark:bg-gray-900 rounded-lg outline-none dark:text-white font-bold text-xs"
+                                                                onKeyDown={handleNewCategoryKeyDown}
                                                             />
                                                         </div>
                                                     </div>
@@ -215,10 +214,10 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
                                             </div>
                                             <div>
                                                 <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-2 block ml-1">文章标签</label>
-                                                <input 
-                                                    className="w-full bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl font-bold dark:text-white outline-none border border-gray-100 dark:border-gray-700 focus:border-emerald-400 transition-colors" 
-                                                    placeholder="输入标签按回车" 
-                                                    onKeyDown={handleTagKeyDown} 
+                                                <input
+                                                    className="w-full bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl font-bold dark:text-white outline-none border border-gray-100 dark:border-gray-700 focus:border-emerald-400 transition-colors"
+                                                    placeholder="输入标签按回车"
+                                                    onKeyDown={handleTagKeyDown}
                                                 />
                                                 <div className="flex flex-wrap gap-2 mt-3">
                                                     {tags.map(t => <span key={t} className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold">#{t}</span>)}
@@ -230,106 +229,27 @@ const WriteModalLayout: React.FC<WriteModalLayoutProps> = ({
 
                                 {step === 2 && (
                                     <div className="max-w-2xl mx-auto">
-                                        <EditorCover 
-                                            preview={cover.preview} 
-                                            onSelect={handleCoverSelect} 
-                                            onRemove={() => setCover({ file: null, preview: '' })} 
+                                        <EditorCover
+                                            preview={cover.preview}
+                                            onSelect={handleCoverSelect}
+                                            onRemove={() => setCover({ file: null, preview: '' })}
                                         />
                                     </div>
                                 )}
 
                                 {step === 3 && (
-                                    mode === 'edit' ? (
-                                        <div className="space-y-2 pb-20">
-                                            {blocks.map((block, index) => (
-                                                <React.Fragment key={block.id}>
-                                                    <EditorBlockWrapper 
-                                                        isFirst={index === 0} 
-                                                        isLast={index === blocks.length - 1} 
-                                                        isInvalid={block.invalid} 
-                                                        onMoveUp={() => moveBlock(index, 'up')} 
-                                                        onMoveDown={() => moveBlock(index, 'down')} 
-                                                        onRemove={() => removeBlock(block.id)}
-                                                    >
-                                                        {block.type === 'heading' && (
-                                                            <EditorTextArea
-                                                                placeholder="小标题"
-                                                                value={block.content}
-                                                                onChange={(v: string) => updateBlock(block.id, 'content', v)}
-                                                                className="text-xl font-bold text-blue-600 border-l-4 border-blue-600 pl-4 py-2"
-                                                            />
-                                                        )}
-                                                        {block.type === 'text' && (
-                                                            <EditorTextArea 
-                                                                placeholder="正文内容..." 
-                                                                value={block.content} 
-                                                                onChange={(v: string) => updateBlock(block.id, 'content', v)} 
-                                                                className="text-base leading-relaxed text-gray-700 dark:text-gray-300" 
-                                                            />
-                                                        )}
-                                                        {block.type === 'image' && (
-                                                            <EditorImageBlock 
-                                                                previewUrl={block.previewUrl} 
-                                                                onSelect={(e) => handleImageSelect(e, block.id)} 
-                                                                onRemove={() => updateBlock(block.id, 'previewUrl', '')} 
-                                                            />
-                                                        )}
-                                                        {block.type === 'download' && (
-                                                            <EditorDownloadBlock 
-                                                                description={block.description || ''} 
-                                                                url={block.url || ''} 
-                                                                onUpdate={(f, v) => updateBlock(block.id, f, v)} 
-                                                            />
-                                                        )}
-                                                    </EditorBlockWrapper>
-
-                                                    <div className="relative h-8 group/ins flex items-center justify-center my-1">
-                                                        <div className="w-full h-[1px] bg-gray-100 dark:bg-white/5 group-hover/ins:bg-blue-500/30 transition-all" />
-                                                        <div className="absolute flex gap-2 opacity-0 group-hover/ins:opacity-100 transition-all scale-90 group-hover/ins:scale-100 bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 rounded-full p-1">
-                                                            <button onClick={() => insertBlock(index, 'text')} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-500 hover:text-blue-500 rounded-full transition-all" title="文本"><Type size={16} /></button>
-                                                            <button onClick={() => insertBlock(index, 'heading')} className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-500 hover:text-blue-500 rounded-full transition-all" title="标题"><HeadingIcon size={16} /></button>
-                                                            <button onClick={() => insertBlock(index, 'image')} className="p-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-gray-500 hover:text-emerald-500 rounded-full transition-all" title="图片"><ImageIcon size={16} /></button>
-                                                            <button onClick={() => insertBlock(index, 'download')} className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-gray-500 hover:text-amber-500 rounded-full transition-all" title="资源"><LinkIcon size={16} /></button>
-                                                        </div>
-                                                    </div>
-                                                </React.Fragment>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="prose prose-lg dark:prose-invert max-w-none pb-20">
-                                            <h1 className="text-3xl font-black mb-8 pb-4 border-b border-gray-100 dark:border-gray-800">{title}</h1>
-                                            {blocks.map((b, idx) => {
-                                                const currentImgIdx = blocks.filter((item, i) => i <= idx && item.type === 'image').length;
-                                                const currentDlIdx = blocks.filter((item, i) => i <= idx && item.type === 'download').length;
-
-                                                return (
-                                                    <div key={b.id} className="mb-6">
-                                                        {b.type === 'heading' && b.content && <h3 className="text-xl font-bold mt-8 mb-4">{b.content}</h3>}
-                                                        {b.type === 'text' && b.content && <p className="text-base leading-7 text-gray-600 dark:text-gray-300">{b.content}</p>}
-                                                        {b.type === 'image' && b.previewUrl && (
-                                                            <figure className="flex flex-col items-center my-6">
-                                                                <img src={b.previewUrl} className="rounded-xl shadow-lg max-h-[500px] object-contain bg-gray-50 dark:bg-black/20" alt={`插图 ${currentImgIdx}`} />
-                                                                <figcaption className="mt-2 text-xs text-gray-400">图 {currentImgIdx}</figcaption>
-                                                            </figure>
-                                                        )}
-                                                        {b.type === 'download' && b.url && (
-                                                            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 my-4 not-prose flex items-start gap-3">
-                                                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg shrink-0">
-                                                                    <LinkIcon size={18} />
-                                                                </div>
-                                                                <div>
-                                                                    <p className="text-sm font-bold text-gray-900 dark:text-gray-100">资源 {currentDlIdx}：{b.description || '未命名资源'}</p>
-                                                                    <a href={b.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline break-all mt-1 block">
-                                                                        {b.url}
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )
+                                    <div className="max-w-5xl mx-auto">
+                                        <EditorStepContent
+                                            mode={mode}
+                                            title={title}
+                                            blocks={blocks}
+                                            insertBlock={insertBlock}
+                                            moveBlock={moveBlock}
+                                            updateBlock={updateBlock}
+                                            removeBlock={removeBlock}
+                                            handleImageSelect={handleImageSelect}
+                                        />
+                                    </div>
                                 )}
                             </div>
                         </div>

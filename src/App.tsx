@@ -1,3 +1,5 @@
+// --- START OF FILE App.tsx ---
+
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -62,8 +64,9 @@ const AppLayout = () => {
             <Footer />
           </div>
 
+          {/* 移除固定宽度 w-64 xl:w-80，让子组件 RightSidebar 自己控制宽度 */}
           {!hideSidebars && (
-            <div className="hidden min-[850px]:block w-64 xl:w-80 flex-shrink-0 relative">
+            <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">
                 <RightSidebar />
               </div>

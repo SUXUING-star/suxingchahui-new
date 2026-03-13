@@ -81,7 +81,7 @@ const Categories: React.FC = () => {
             {expandedCategory === catData._id && (
               <div className="px-10 pb-12 animate-in fade-in zoom-in-95 duration-500">
                 <div className="border-t dark:border-white/5 pt-10">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 justify-items-center">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
                     {catData.posts.map(post => <PostCard key={post.id} post={post} />)}
                   </div>
                 </div>
