@@ -85,10 +85,10 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         if (!editSlug) return;
         setIsLoadingData(true);
         try {
-            const post = await getPostById(editSlug);
+            const post = await getPostById(editSlug, token || undefined); 
             if (!post) throw new Error('文章未找到');
 
-            console.log('Fetched post data:', post); // 调试日志
+            // console.log('Fetched post data:', post); // 调试日志
 
             setTitle(post.title);
             setCategory(post.category);
@@ -250,7 +250,16 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         if (!isMetaDone) { setStep(1); return showNotification('核心配置未完成', 'error'); }
         if (!isCoverDone) { setStep(2); return showNotification('请设置封面', 'error'); }
         if (!isContentDone) { setStep(3); return showNotification('文章内容不能为空', 'error'); }
-        if (!token) return showNotification('请先登录', 'error');
+        // 【新增】下载链接完整性强制检查
+        const brokenLinks = blocks.filter(b => b.type === 'download' && (!b.url || b.url.trim() === ''));
+        if (brokenLinks.length > 0) {
+            // 将第一个损坏的块标记为 invalid 并滚回第三步
+            setBlocks(prev => prev.map(b => b.type === 'download' && !b.url ? { ...b, invalid: true } : b));
+            setStep(3);
+            return showNotification('存在未填写的下载链接，请检查或删除该块后再提交', 'error');
+        }
+
+        if (!token) return showNotification('身份验证已失效，请重新登录', 'error');
 
         setIsSubmitting(true);
         showNotification('星火集结：正在同步资源...', 'success');
