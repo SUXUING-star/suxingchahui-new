@@ -23,12 +23,16 @@ const LoadingSpinner: React.FC = () => {
   return (
     <div className="flex items-center justify-center py-20 w-full animate-in fade-in duration-700">
       <div className="flex flex-col items-center p-12 bg-white/90 dark:bg-gray-800/95 border border-gray-100 dark:border-white/5 rounded-[48px] shadow-2xl">
-        <div className="relative w-16 h-16 animate-spin-and-jiggle">
-          <div className="absolute w-2.5 h-2.5 bg-blue-500 rounded-full shadow-lg top-0 left-1/2 -translate-x-1/2"></div>
-          <div className="absolute w-2.5 h-2.5 bg-blue-500 rounded-full shadow-lg bottom-0 left-[20%]"></div>
-          <div className="absolute w-2.5 h-2.5 bg-blue-500 rounded-full shadow-lg bottom-0 right-[20%]"></div>
+        
+        {/* 高级流光环容器 */}
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          {/* 核心光束：拖尾逐渐透明变细 */}
+          <div className="absolute inset-0 rounded-full loader-sunlight"></div>
+          {/* 模糊光晕：模拟阳光的散射感 */}
+          <div className="absolute inset-0 rounded-full loader-sunlight-blur"></div>
         </div>
-        <div className="mt-12 flex flex-col items-center">
+
+        <div className="mt-10 flex flex-col items-center">
             <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.5em] mb-3">
                 载入中
             </span>
@@ -38,19 +42,43 @@ const LoadingSpinner: React.FC = () => {
         </div>
       </div>
 
-      {/* 关键：行内定义动画，不污染全局 */}
+      {/* 纯 CSS 绘制的流光与蒙版 */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes spin-and-jiggle {
-          0% { transform: rotate(0deg); }
-          70% { transform: rotate(360deg); }
-          75% { transform: rotate(360deg) translateY(0); }
-          80% { transform: rotate(360deg) translateY(10px); }
-          85% { transform: rotate(360deg) translateY(-5px); }
-          90% { transform: rotate(360deg) translateY(2px); }
-          100% { transform: rotate(360deg) translateY(0); }
+        /* 核心流光层 */
+        .loader-sunlight {
+          background: conic-gradient(from 180deg at 50% 50%, transparent 0%, transparent 40%, rgba(59, 130, 246, 0.3) 70%, rgba(59, 130, 246, 1) 100%);
+          /* 掏空中间，形成线条感 */
+          -webkit-mask: radial-gradient(transparent 58%, #000 59%);
+          mask: radial-gradient(transparent 58%, #000 59%);
+          animation: spin-sunlight 1.2s linear infinite;
         }
-        .animate-spin-and-jiggle {
-          animation: spin-and-jiggle 1.5s infinite cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        
+        /* 头部耀眼的光球 (像彗星头) */
+        .loader-sunlight::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 12%;
+          height: 12%;
+          background: #ffffff;
+          border-radius: 50%;
+          box-shadow: 0 0 12px 3px rgba(59, 130, 246, 0.9);
+        }
+
+        /* 外围模糊散射层 (不是刺眼的激光，是柔和的阳光) */
+        .loader-sunlight-blur {
+          background: conic-gradient(from 180deg at 50% 50%, transparent 0%, transparent 30%, rgba(59, 130, 246, 0.2) 60%, rgba(59, 130, 246, 0.7) 100%);
+          -webkit-mask: radial-gradient(transparent 45%, #000 46%);
+          mask: radial-gradient(transparent 45%, #000 46%);
+          filter: blur(6px);
+          animation: spin-sunlight 1.2s linear infinite;
+        }
+
+        @keyframes spin-sunlight {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}} />
     </div>
