@@ -30,38 +30,71 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({
       const id = slugify(text);
       return `<h${level} id="${id}">${text}</h${level}>`;
     };
+
+    // 转义 HTML 防止代码里有尖括号被当成 HTML 标签
+    const escapeHtml = (str: string) => {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    // 重写多行代码块渲染，避免内部的 # 被当成标题，并增加区分样式
+    renderer.code = (code, language) => {
+      const langClass = language ? ` class="language-${escapeHtml(language)}"` : '';
+      return `<pre class="not-prose my-6 p-4 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-x-auto text-[13px] sm:text-sm leading-relaxed font-mono text-gray-800 dark:text-gray-200 shadow-sm whitespace-pre"><code${langClass}>${escapeHtml(code)}</code></pre>`;
+    };
+
+    // 重写行内代码渲染，增加带背景的小框样式并移除默认样式的丑陋反引号
+    renderer.codespan = (code) => {
+      return `<code class="px-1.5 py-0.5 mx-0.5 bg-gray-100/80 dark:bg-gray-800/80 border border-gray-200/80 dark:border-gray-700/80 rounded-md text-[0.85em] font-mono text-blue-600 dark:text-blue-400 break-words before:hidden after:hidden">${code}</code>`;
+    };
     
     marked.setOptions({ renderer });
 
     const imageMap = new Map(contentImages.map(p => [p._id, p]));
     const downloadMap = new Map(downloads.map(d => [d._id, d]));
     
+    // 保护 Markdown 代码块：提取代码段落替换为占位符，防止切分正则将包含 `#` 占位符的代码腰斩
+    const codeBlocks: string[] = [];
+    const codeBlockRegex = /(```[\s\S]*?```|`[^`]*`)/g;
+    const safeContent = content.replace(codeBlockRegex, (match) => {
+      codeBlocks.push(match);
+      return `__MARKDOWN_CODE_${codeBlocks.length - 1}__`;
+    });
+
     // 正则切分自定义标签 [image:xxx] [download:xxx]
     const placeholderRegex = /\[(image|download):(.*?)\]/g;
     const nodes: { type: string; id?: string; content?: string }[] = [];
     let lastIndex = 0;
-    const matches = Array.from(content.matchAll(placeholderRegex));
+    const matches = Array.from(safeContent.matchAll(placeholderRegex));
     
     for (const match of matches) {
       const [fullMatch, type, id] = match;
       const matchIndex = match.index!;
       if (matchIndex > lastIndex) {
-        nodes.push({ type: 'text', content: content.substring(lastIndex, matchIndex) });
+        nodes.push({ type: 'text', content: safeContent.substring(lastIndex, matchIndex) });
       }
       nodes.push({ type, id });
       lastIndex = matchIndex + fullMatch.length;
     }
 
-    if (lastIndex < content.length) {
-      nodes.push({ type: 'text', content: content.substring(lastIndex) });
+    if (lastIndex < safeContent.length) {
+      nodes.push({ type: 'text', content: safeContent.substring(lastIndex) });
     }
 
     // 渲染节点
     return nodes.map((node, index) => {
       const key = `node-${index}`;
       
-      if (node.type === 'text') {
-        return <div key={key} dangerouslySetInnerHTML={{ __html: marked.parse(node.content || '') as string }} />;
+      if (node.type === 'text' && node.content) {
+        // 恢复被保护的代码块占位符，执行解析
+        const restoredContent = node.content.replace(/__MARKDOWN_CODE_(\d+)__/g, (_, idx) => {
+          return codeBlocks[parseInt(idx, 10)] || '';
+        });
+        return <div key={key} dangerouslySetInnerHTML={{ __html: marked.parse(restoredContent) as string }} />;
       }
 
       if (node.type === 'image') {

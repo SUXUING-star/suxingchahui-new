@@ -42,10 +42,10 @@ interface WriteModalProps {
 }
 
 const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = null }) => {
-    const { token, user } = useAuth(); 
+    const { token, user } = useAuth();
     const { showNotification } = useNotification();
     const { onWriteSuccess } = useModal();
-    
+
     // --- State ---
     const [step, setStep] = useState<number>(1);
     const [mode, setMode] = useState<'edit' | 'preview'>('edit');
@@ -87,24 +87,26 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         try {
             const post = await getPostById(editSlug);
             if (!post) throw new Error('文章未找到');
-            
+
+            console.log('Fetched post data:', post); // 调试日志
+
             setTitle(post.title);
             setCategory(post.category);
             setTags(post.tags);
             setTopped(post.topped); // 2. 【关键】加载已有的置顶状态
             setCover({ file: null, preview: post.coverImage?.src || '' });
-            
+
             const parsedBlocks = parseMDToBlocks(post.content, post.contentImages, post.downloads);
             const sanitizedBlocks: Block[] = parsedBlocks.map(b => ({
-                id: b.id,
+                id: b.id || Date.now() + Math.random(), // 确保 ID 唯一
                 type: b.type,
                 content: b.content || '',
-                invalid: b.invalid || false,
-                description: b.description || '',
-                url: b.url || '',
+                invalid: false,
+                // 强制检查下载块的元数据
+                description: b.description || (b as any).download?.description || '',
+                url: b.url || (b as any).download?.url || '',
                 previewUrl: b.previewUrl || '',
-                file: null,
-                resourceId: b.resourceId,
+                resourceId: b.resourceId || (b as any)._id, // 关键：保留原始 ID 链接
             }));
             setBlocks(sanitizedBlocks);
         } catch (err: any) {
@@ -116,10 +118,10 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
     }, [editSlug, onClose, showNotification]);
 
     const resetState = useCallback(() => {
-        setTitle(''); 
-        setCategory(''); 
-        setTags([]); 
-        setStep(1); 
+        setTitle('');
+        setCategory('');
+        setTags([]);
+        setStep(1);
         setMode('edit');
         setTopped(false); // 3. 重置状态
         setCover({ file: null, preview: '' });
@@ -160,9 +162,12 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
     const updateBlock = (id: number, field: keyof Block, value: any) => {
         setBlocks(prev => prev.map(b => {
             if (b.id === id) {
+                // 使用展开运算符保留所有旧字段（包括 description, url, resourceId 等）
                 const updated = { ...b, [field]: value };
-                if (b.type === 'download' && field === 'url' && (value as string).trim() !== '') {
-                    updated.invalid = false;
+
+                // 补丁：如果更新的是 url 或 description，确保 invalid 状态解除
+                if (b.type === 'download' && (field === 'url' || field === 'description')) {
+                    if (updated.url?.trim()) updated.invalid = false;
                 }
                 return updated;
             }
@@ -251,9 +256,8 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
         showNotification('星火集结：正在同步资源...', 'success');
 
         try {
-            let coverData: { src: string; alt: string } | undefined = undefined;
-            if (cover.preview) coverData = { src: cover.preview, alt: title };
-            
+            // 1. 先处理封面 (保持不变)
+            let coverData = cover.preview ? { src: cover.preview, alt: title } : undefined;
             if (cover.file) {
                 const res = await apiUploadPostImage(cover.file, token);
                 coverData = { src: res.url, alt: title };
@@ -261,37 +265,55 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
 
             const contentImages: any[] = [];
             const downloads: any[] = [];
-            
+
+            // 2. 预处理所有块，确保 ID 稳定，不丢失数据
             const finalBlocks = await Promise.all(blocks.map(async (b) => {
                 if (b.type === 'image') {
                     if (b.file) {
                         const res = await apiUploadPostImage(b.file, token);
-                        contentImages.push({ _id: res.id, src: res.url, alt: `插图 ${contentImages.length + 1}` });
+                        const imgObj = { _id: res.id, src: res.url, alt: b.content || `插图` };
+                        contentImages.push(imgObj);
                         return { ...b, resourceId: res.id };
-                    } else if (b.resourceId) {
-                        contentImages.push({ _id: b.resourceId, src: b.previewUrl, alt: `插图 ${contentImages.length + 1}` });
+                    } else if (b.previewUrl) {
+                        // 已经是存在的图片
+                        const resId = b.resourceId || `img-${b.id}`;
+                        contentImages.push({ _id: resId, src: b.previewUrl, alt: b.content || '插图' });
+                        return { ...b, resourceId: resId };
                     }
                 }
-                if (b.type === 'download' && b.url) {
-                    const dlId = b.resourceId || `dl-${Math.random().toString(36).substr(2, 5)}`;
-                    downloads.push({ _id: dlId, description: b.description, url: b.url });
+
+                if (b.type === 'download') {
+                    // 【核心修复】：不要判断 b.url，只要是下载类型就必须占位
+                    // 优先使用已有的 resourceId，没有就根据 block.id 生成一个固定的
+                    const dlId = b.resourceId || `dl-${b.id}`;
+                    downloads.push({
+                        _id: dlId,
+                        description: b.description || b.content || '', // 兼容 content 里的描述
+                        url: b.url || ''
+                    });
                     return { ...b, resourceId: dlId };
                 }
                 return b;
             }));
 
+            // 3. 生成 Markdown 文本
             const mdContent = finalBlocks.map(b => {
                 if (b.type === 'heading') return `### ${b.content}`;
                 if (b.type === 'image' && b.resourceId) return `[image:${b.resourceId}]`;
                 if (b.type === 'download' && b.resourceId) return `[download:${b.resourceId}]`;
-                return b.content;
+                return b.content; // 普通文本
             }).join('\n\n');
 
-            // 4. 【关键】将 topped 传给请求模型
+            // 4. 组装请求模型
             const requestModel = new PostRequest({
-                title, category, tags, coverImage: coverData, contentImages, downloads,
-                content: mdContent, excerpt: blocks.find(b => b.type === 'text')?.content?.slice(0, 150) || '',
-                // 只有管理员才能发送 topped 字段
+                title,
+                category,
+                tags,
+                coverImage: coverData,
+                contentImages,
+                downloads, // 这里现在包含了完整的元数据
+                content: mdContent,
+                excerpt: blocks.find(b => b.type === 'text')?.content?.slice(0, 150) || '',
                 topped: isAdmin ? topped : undefined,
             });
 
@@ -305,9 +327,9 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
 
             const finalStatus = responseData.status;
 
-            
+
             showNotification('文章已发布（会经过审核）', 'success', '感谢支持');
-           
+
 
             if (onWriteSuccess) onWriteSuccess();
             onClose();
@@ -360,7 +382,7 @@ const WriteModal: React.FC<WriteModalProps> = ({ isOpen, onClose, editSlug = nul
             isMetaDone={isMetaDone}
             isCoverDone={isCoverDone}
             isContentDone={isContentDone}
-             // 7. 传递新增的 props 给 Layout
+            // 7. 传递新增的 props 给 Layout
             isAdmin={isAdmin}
             isTopped={topped}
             setIsTopped={setTopped}

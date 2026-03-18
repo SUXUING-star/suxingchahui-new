@@ -9,10 +9,7 @@ import {
 import anime from 'animejs';
 
 import EditorTextArea from './EditorTextArea';
-import EditorImageBlock from './EditorImageBlock';
-import EditorDownloadBlock from './EditorDownloadBlock';
 import EditorCover from './EditorCover';
-import EditorBlockWrapper from './EditorBlockWrapper';
 import ConfirmModal from '../../common/ConfirmModal';
 import { Block, BlockType } from './WriteModal';
 import EditorStepContent from './EditorStepContent';

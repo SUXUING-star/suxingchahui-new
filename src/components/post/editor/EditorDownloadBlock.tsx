@@ -19,7 +19,7 @@ const EditorDownloadBlock: React.FC<EditorDownloadBlockProps> = ({ description, 
           <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400" size={18} />
           <input 
             placeholder="资源描述，例如：4K 蓝光原盘" 
-            value={description}
+            value={description || ''} // 增加兜底防御 undefined
             onChange={(e: ChangeEvent<HTMLInputElement>) => onUpdate('description', e.target.value)}
             className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-gray-800 rounded-2xl font-bold outline-none border-none shadow-sm dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
           />
@@ -28,7 +28,7 @@ const EditorDownloadBlock: React.FC<EditorDownloadBlockProps> = ({ description, 
           <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400" size={18} />
           <input 
             placeholder="下载链接，例如：magnet:?xt=..." 
-            value={url}
+            value={url || ''} // 增加兜底防御 undefined
             onChange={(e: ChangeEvent<HTMLInputElement>) => onUpdate('url', e.target.value)}
             className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-gray-800 rounded-2xl font-bold outline-none border-none shadow-sm dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600"
           />

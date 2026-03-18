@@ -1,4 +1,3 @@
-// --- START OF FILE EditorStepContent.tsx ---
 import React, { useRef, useMemo } from 'react';
 import { 
     Type, Heading as HeadingIcon, Image as ImageIcon, Link as LinkIcon, 
@@ -9,7 +8,7 @@ import EditorBlockWrapper from './EditorBlockWrapper';
 import EditorTextArea from './EditorTextArea';
 import EditorImageBlock from './EditorImageBlock';
 import EditorDownloadBlock from './EditorDownloadBlock';
-import ContentRenderer from '../content/ContentRenderer'; // 引入已有的渲染组件
+import ContentRenderer from '../content/ContentRenderer'; 
 import { Block, BlockType } from './WriteModal';
 
 interface EditorStepContentProps {
@@ -61,7 +60,11 @@ const EditorStepContent: React.FC<EditorStepContentProps> = ({
         const mdString = blocks.map((b) => {
             if (b.type === 'heading' && b.content) return `### ${b.content}`;
             if (b.type === 'image' && b.previewUrl) return `[image:${b.id}]`;
-            if (b.type === 'download' && b.url) return `[download:${b.id}]`;
+            
+            // 兼容可能映射错误的字段
+            const dlUrl = b.url || (b as any).link || (b as any).href || (b as any).download?.url;
+            if (b.type === 'download' && dlUrl) return `[download:${b.id}]`;
+            
             if (b.type === 'text') return b.content;
             return '';
         }).join('\n\n');
@@ -72,10 +75,11 @@ const EditorStepContent: React.FC<EditorStepContentProps> = ({
             alt: '预览插图'
         }));
 
-        const dls = blocks.filter(b => b.type === 'download' && b.url).map(b => ({
+        const dls = blocks.filter(b => b.type === 'download' && (b.url || (b as any).link || (b as any).href || (b as any).download?.url)).map(b => ({
             _id: String(b.id),
-            description: b.description || '未命名资源',
-            url: b.url
+            // 全方位回显兼容
+            description: b.description || b.content || (b as any).title || (b as any).download?.description || '未命名资源',
+            url: b.url || (b as any).link || (b as any).href || (b as any).download?.url || ''
         }));
 
         return { previewMarkdown: mdString, mockImages: imgs, mockDownloads: dls };
@@ -142,19 +146,32 @@ const EditorStepContent: React.FC<EditorStepContentProps> = ({
                         
                         {block.type === 'image' && (
                             <EditorImageBlock 
-                                previewUrl={block.previewUrl} 
+                                previewUrl={block.previewUrl || block.url || block.content || ''} 
                                 onSelect={(e) => handleImageSelect(e, block.id)} 
                                 onRemove={() => updateBlock(block.id, 'previewUrl', '')} 
                             />
                         )}
                         
-                        {block.type === 'download' && (
-                            <EditorDownloadBlock 
-                                description={block.description || ''} 
-                                url={block.url || ''} 
-                                onUpdate={(f, v) => updateBlock(block.id, f, v)} 
-                            />
-                        )}
+                        {block.type === 'download' && (() => {
+                            // 疯狂回显策略：即使解析器把描述解析成了content，或者把url解析成了link/href，也能正确提取
+                            const desc = block.description || block.content || (block as any).title || (block as any).download?.description || '';
+                            const linkUrl = block.url || (block as any).link || (block as any).href || (block as any).download?.url || '';
+
+                            return (
+                                <EditorDownloadBlock 
+                                    description={desc} 
+                                    url={linkUrl} 
+                                    onUpdate={(f, v) => {
+                                        // 正常更新目标字段
+                                        updateBlock(block.id, f, v);
+                                        // 补丁：如果你原本的解析逻辑只认识 content，更新时双向同步给 content 以防万一
+                                        if (f === 'description') {
+                                            updateBlock(block.id, 'content', v);
+                                        }
+                                    }} 
+                                />
+                            );
+                        })()}
                     </EditorBlockWrapper>
 
                     {/* 块间插入工具栏 */}
