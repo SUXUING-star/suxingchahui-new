@@ -24,6 +24,7 @@ const Categories = lazy(() => import('@/pages/Categories'));
 const Tags = lazy(() => import('@/pages/Tags'));
 const Archive = lazy(() => import('@/pages/Archive'));
 const MyPosts = lazy(() => import('@/pages/MyPosts'));
+const MyBooks = lazy(() => import('@/pages/MyBooks'));
 const AdminPending = lazy(() => import('@/pages/AdminPending'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -54,6 +55,7 @@ const AppLayout = () => {
                   <Route path="/post/:id" element={<PostDetail />} />
                   <Route path="/my-posts" element={<MyPosts />} />
                   <Route path="/admin/pending" element={<AdminPending />} />
+                  <Route path="/books" element={<MyBooks />} /> 
                   <Route path="/about" element={<About />} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/tags" element={<Tags />} />
