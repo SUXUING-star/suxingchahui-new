@@ -37,7 +37,7 @@ const MyBooks: React.FC = () => {
     return () => setHideSidebars(false);
   }, [setHideSidebars]);
 
-  // 2. 数据获取核心 (支持指定页码)
+  // 2. 数据获取核心
   const fetchData = useCallback(async (targetPage: number) => {
     setLoading(true);
     try {
@@ -63,7 +63,7 @@ const MyBooks: React.FC = () => {
 
   // 4. 执行物理粉碎
   const execDelete = async () => {
-    if (!window.confirm(`警告：确认永久粉碎这 ${selectedIds.length} 条馆藏记录？此操作不可逆。`)) return;
+    if (!window.confirm(`警告：确认永久粉碎这 ${selectedIds.length} 条馆藏记录？`)) return;
     try {
       await deleteBooks(selectedIds, token);
       setSelectedIds([]);
@@ -77,8 +77,8 @@ const MyBooks: React.FC = () => {
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8 text-gray-800 dark:text-white min-h-screen pb-24">
 
-      {/* 顶部：战略控制台 - 移动端优化 padding 和字号 */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-12 gap-4 md:gap-8">
+      {/* 顶部：战略控制台 */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-8">
         <div className="space-y-1 md:space-y-2">
           <h1 className="text-2xl md:text-5xl font-black tracking-tighter italic flex items-center gap-2 md:gap-4">
             <Library size={32} className="text-blue-600 md:w-12 md:h-12 shrink-0" />
@@ -98,9 +98,9 @@ const MyBooks: React.FC = () => {
               <button
                 onClick={execDelete}
                 disabled={selectedIds.length === 0}
-                className="bg-red-600 text-white px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest disabled:opacity-30 hover:bg-red-700 transition-all shadow-lg"
+                className="bg-red-600 text-white px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest disabled:opacity-30 hover:bg-red-700 transition-all shadow-lg shadow-red-900/20"
               >
-                执行物理粉碎 ({selectedIds.length})
+                粉碎 ({selectedIds.length})
               </button>
               <button onClick={() => { setIsSelectMode(false); setSelectedIds([]); }} className="px-3 md:px-5 py-2 md:py-3 text-[9px] md:text-[11px] font-black uppercase text-gray-500 hover:text-white transition-colors">
                 取消
@@ -118,10 +118,14 @@ const MyBooks: React.FC = () => {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && setFilters(prev => ({ ...prev, search }))}
-                  className="bg-gray-100 dark:bg-white/5 border border-transparent focus:border-blue-600/50 rounded-lg md:rounded-2xl py-2 md:py-2.5 pl-8 md:pl-10 pr-2 md:pr-4 text-[9px] md:text-[11px] font-black uppercase outline-none w-24 md:w-40 focus:w-32 md:focus:w-64 transition-all"
+                  className="bg-gray-100 dark:bg-white/5 border border-transparent focus:border-blue-600/50 rounded-lg md:rounded-2xl py-2 md:py-2.5 pl-8 md:pl-10 pr-2 md:pr-4 text-[9px] md:text-[11px] font-black uppercase outline-none w-24 md:w-36 focus:w-32 transition-all"
                 />
                 <Search size={12} className="absolute left-2.5 md:left-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
               </div>
+              {/* 这里是之前丢掉的导出按钮，接回来了！ */}
+              <button onClick={() => setIsExportModalOpen(true)} className="flex items-center gap-1.5 md:gap-2 bg-gray-100 dark:bg-white/5 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all border border-transparent">
+                <Download size={14} /> 导出
+              </button>
               <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-1.5 md:gap-2 bg-blue-600 text-white px-3 md:px-8 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest hover:scale-105 shadow-xl shadow-blue-500/30 transition-all">
                 <Plus size={16} /> 录入
               </button>
@@ -130,24 +134,16 @@ const MyBooks: React.FC = () => {
         </div>
       </header>
 
-      {/* --- 强制左右分栏容器 --- */}
+      {/* --- 强制左右分栏 --- */}
       <div className="flex flex-row gap-2 md:gap-12">
 
-        {/* 左侧：统计面板 - 移动端强制变窄 */}
         <aside className="w-[70px] sm:w-[100px] md:w-64 lg:w-72 flex-shrink-0">
-          <BookStatsSidebar
-            stats={stats}
-            activeFilters={filters}
-            onFilterChange={setFilters}
-          />
+          <BookStatsSidebar stats={stats} activeFilters={filters} onFilterChange={setFilters} />
         </aside>
 
-        {/* 右侧：主场 - 强制网格双列 */}
         <main className="flex-1 min-w-0">
-
-          {/* 筛选 Tip */}
           {(filters.country || filters.bookType) && (
-            <div className="mb-4 md:mb-8 flex items-center gap-2 animate-in fade-in slide-in-from-left-4">
+            <div className="mb-4 flex items-center gap-2 animate-in fade-in slide-in-from-left-4">
               <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg md:rounded-2xl shadow-lg">
                 <Filter size={12} className="shrink-0" />
                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest truncate">
@@ -161,18 +157,11 @@ const MyBooks: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="min-h-[300px] flex items-center justify-center">
-              <LoadingSpinner />
-            </div>
-          ) : books.length === 0 ? (
-            <div className="min-h-[300px] flex flex-col items-center justify-center text-gray-500 opacity-40 space-y-4">
-              <Inbox size={48} strokeWidth={1} />
-              <p className="font-black text-[10px] uppercase tracking-widest">无存档</p>
-            </div>
+            <div className="min-h-[300px] flex items-center justify-center"><LoadingSpinner /></div>
           ) : (
             <>
-              {/* 重点：grid-cols-2 强制移动端双列 */}
-              <div className="grid grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 animate-in fade-in duration-500">
+              {/* ⚠️ 网格改为 grid-cols-3，让卡片宽度被压缩，自然形成竖向效果 */}
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 md:gap-4">
                 {books.map(book => (
                   <BookCard
                     key={book._id}
@@ -185,31 +174,14 @@ const MyBooks: React.FC = () => {
                 ))}
               </div>
 
-              {/* 分页控制 */}
               {pagination.pages > 1 && (
-                <nav className="flex justify-center items-center gap-4 md:gap-12 mt-10 md:mt-20">
-                  <button
-                    disabled={pagination.page === 1}
-                    onClick={() => fetchData(pagination.page - 1)}
-                    className="p-3 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all shadow-md"
-                  >
-                    <ChevronLeft size={20} className="md:w-7 md:h-7" />
-                  </button>
-
+                <nav className="flex justify-center items-center gap-4 mt-12 md:mt-20">
+                  <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-2 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all"><ChevronLeft size={20} className="md:w-7 md:h-7" /></button>
                   <div className="flex flex-col items-center">
                     <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500">PAGE</span>
-                    <span className="text-sm md:text-2xl font-black italic">
-                      {pagination.page} <span className="text-blue-600">/</span> {pagination.pages}
-                    </span>
+                    <span className="text-sm md:text-2xl font-black italic">{pagination.page} / {pagination.pages}</span>
                   </div>
-
-                  <button
-                    disabled={pagination.page === pagination.pages}
-                    onClick={() => fetchData(pagination.page + 1)}
-                    className="p-3 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all shadow-md"
-                  >
-                    <ChevronRight size={20} className="md:w-7 md:h-7" />
-                  </button>
+                  <button disabled={pagination.page === pagination.pages} onClick={() => fetchData(pagination.page + 1)} className="p-2 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all"><ChevronRight size={20} className="md:w-7 md:h-7" /></button>
                 </nav>
               )}
             </>
@@ -217,7 +189,6 @@ const MyBooks: React.FC = () => {
         </main>
       </div>
 
-      {/* 弹窗 */}
       {isCreateModalOpen && <CreateBookModal onClose={() => setIsCreateModalOpen(false)} onSuccess={() => fetchData(1)} />}
       {isExportModalOpen && <ExportModal currentFilters={filters} onClose={() => setIsExportModalOpen(false)} />}
       {detailBook && <BookDetailModal book={detailBook} onClose={() => setDetailBook(null)} onRefresh={() => fetchData(pagination.page)} />}
