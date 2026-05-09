@@ -4,7 +4,7 @@ import anime from 'animejs';
 import {
   X, BookOpen, User, Globe, Tag,
   MessageSquare, Edit3, Save,
-  RotateCcw, Plus, Trash2, List, Clock, History
+  RotateCcw, Plus, Trash2, List, Clock, History, CheckCircle2, Circle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Book, updateBook, INITIAL_BOOK_FORM, BOOK_COUNTRIES } from '@/utils/bookApi';
@@ -88,10 +88,30 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
       {/* 弹窗主体 */}
       <div ref={modalRef} className="relative w-full max-w-3xl bg-white dark:bg-[#0a0a0a] rounded-[40px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden">
-        
+
         {/* 固定头部岛屿 */}
         <header className="p-6 md:p-10 pb-4 flex justify-between items-start shrink-0">
           <div className="flex-1 space-y-4">
+            <div className="flex items-center gap-3">
+              {/* 状态显示/编辑 */}
+              {isEditing ? (
+                <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
+                  <button
+                    onClick={() => setFormData({ ...formData, status: 'read' })}
+                    className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${formData.status === 'read' ? 'bg-emerald-500 text-white shadow-lg' : 'text-gray-400'}`}
+                  >已读</button>
+                  <button
+                    onClick={() => setFormData({ ...formData, status: 'unread' })}
+                    className={`px-3 py-1 rounded-md text-[10px] font-black transition-all ${formData.status === 'unread' ? 'bg-orange-500 text-white shadow-lg' : 'text-gray-400'}`}
+                  >待读</button>
+                </div>
+              ) : (
+                <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter border ${formData.status === 'read' ? 'border-emerald-500/50 text-emerald-500' : 'border-orange-500/50 text-orange-500'
+                  }`}>
+                  {formData.status === 'read' ? <><CheckCircle2 size={10} /> READ</> : <><Circle size={10} /> UNREAD</>}
+                </span>
+              )}
+            </div>
             {isEditing ? (
               <input
                 className="text-2xl md:text-4xl font-black italic text-blue-600 bg-gray-100 dark:bg-white/5 border-none rounded-2xl px-4 py-2 w-full outline-none focus:ring-2 ring-blue-500"
@@ -120,7 +140,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
         {/* 内容滚动区 */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-2 space-y-10 custom-scrollbar">
-          
+
           {/* 篇目岛屿 (仅短篇集显示) */}
           {formData.bookType === 'collection' && (
             <section className="bg-blue-600/5 rounded-[32px] p-6 border border-blue-500/10">

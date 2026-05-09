@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import anime from 'animejs';
-import { X, Save, Type, Globe2, History, MessageSquare, PlusCircle } from 'lucide-react';
+import {
+  X, Save, Type, Globe2, History, MessageSquare,
+  PlusCircle, Circle, CheckCircle2
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { BOOK_COUNTRIES, BOOK_TYPES, createBook, INITIAL_BOOK_FORM } from '@/utils/bookApi';
 
@@ -14,7 +17,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(INITIAL_BOOK_FORM);
-  
+
   const modalRef = useRef(null);
   const backdropRef = useRef(null);
 
@@ -77,14 +80,14 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* 遮罩 */}
-      <div 
+      <div
         ref={backdropRef}
-        className="absolute inset-0 bg-black/70 backdrop-blur-md" 
-        onClick={handleClose} 
+        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+        onClick={handleClose}
       />
 
       {/* 弹窗主体 - 限制高度并允许内部滚动 */}
-      <div 
+      <div
         ref={modalRef}
         className="relative w-full max-w-lg bg-white dark:bg-[#121212] rounded-[32px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh]"
       >
@@ -101,7 +104,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
         {/* 可滚动区域 */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar">
           <div className="space-y-5">
-            
+
             {/* 基础信息 */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -134,12 +137,41 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
               <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 px-1">
                 <History size={12} className="text-blue-600" /> 出版年份 / 年代
               </label>
-              <input 
-                className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 ring-blue-500/30 transition-all" 
-                placeholder="例如：1967" 
+              <input
+                className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 ring-blue-500/30 transition-all"
+                placeholder="例如：1967"
                 value={formData.year}
-                onChange={e => setFormData({ ...formData, year: e.target.value })} 
+                onChange={e => setFormData({ ...formData, year: e.target.value })}
               />
+            </div>
+
+            {/* 阅读状态选择 - 新增 */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-gray-500 px-1">阅读状态</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: 'read' })}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${formData.status === 'read'
+                    ? 'border-emerald-500 bg-emerald-500/5 text-emerald-600 shadow-sm'
+                    : 'border-transparent bg-gray-100 dark:bg-white/5 text-gray-400'
+                    }`}
+                >
+                  <CheckCircle2 size={16} />
+                  <span className="font-bold text-xs">已读记录</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: 'unread' })}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all ${formData.status === 'unread'
+                    ? 'border-orange-500 bg-orange-500/5 text-orange-600 shadow-sm'
+                    : 'border-transparent bg-gray-100 dark:bg-white/5 text-gray-400'
+                    }`}
+                >
+                  <Circle size={16} />
+                  <span className="font-bold text-xs">加入待读</span>
+                </button>
+              </div>
             </div>
 
             {/* 体裁选择 */}
