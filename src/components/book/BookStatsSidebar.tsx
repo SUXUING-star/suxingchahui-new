@@ -1,5 +1,8 @@
+// --- components/book/BookStatsSidebar.tsx ---
+
 import React, { useMemo } from 'react';
 import { PieChart, Layers } from 'lucide-react';
+import { BOOK_SORT_ORDER, BOOK_TYPE_MAP } from '@/utils/bookApi';
 
 interface StatDetail {
   name: string;
@@ -18,16 +21,24 @@ interface Props {
   onFilterChange: (filters: { country?: string; bookType?: string }) => void;
 }
 
-const TYPE_MAP: Record<string, string> = { 
-  '中长篇': 'novel', 
-  '短篇集': 'collection', 
-  '短篇/散文': 'short', 
-  '诗歌': 'poetry' 
+
+// 2. 抽离通用的排序函数
+const sortDetails = (details: StatDetail[]) => {
+  return [...details].sort((a, b) => {
+    let indexA = BOOK_SORT_ORDER.indexOf(a.name);
+    let indexB = BOOK_SORT_ORDER.indexOf(b.name);
+    
+    // 如果不在定义列表里，排在最后
+    if (indexA === -1) indexA = 99;
+    if (indexB === -1) indexB = 99;
+    
+    return indexA - indexB;
+  });
 };
 
 const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChange }) => {
   
-  // --- 计算全馆总计 (逻辑不变) ---
+  // --- 计算全馆总计 (增加强制排序) ---
   const globalStats = useMemo(() => {
     const totals: Record<string, number> = {};
     let grandTotal = 0;
@@ -39,15 +50,16 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
       });
     });
 
+    const combinedDetails = Object.entries(totals).map(([name, count]) => ({ name, count }));
+
     return {
       total: grandTotal,
-      details: Object.entries(totals).map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count)
+      details: sortDetails(combinedDetails) // <--- 强制排序
     };
   }, [stats]);
 
   const handleGlobalTypeClick = (typeName: string) => {
-    const typeKey = TYPE_MAP[typeName] || typeName;
+    const typeKey = BOOK_TYPE_MAP[typeName] || typeName;
     if (!activeFilters.country && activeFilters.bookType === typeKey) {
       onFilterChange({});
     } else {
@@ -57,13 +69,8 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
 
   return (
     <aside className="w-full h-full">
-      {/* 
-         移动端：p-2, rounded-xl, space-y-6, sticky top-16
-         PC端：p-7, rounded-[32px], space-y-12, sticky top-24
-      */}
       <div className="bg-white/80 dark:bg-gray-900/85 backdrop-blur-3xl rounded-xl md:rounded-[32px] p-2 md:p-7 shadow-2xl border border-white/30 dark:border-white/5 sticky top-16 md:top-24 overflow-y-auto max-h-[85vh] no-scrollbar">
         
-        {/* 头部：标题在移动端只显示图标或极简文字 */}
         <div className="flex items-center justify-between mb-4 md:mb-8">
           <div className="flex items-center gap-1 md:gap-2">
             <PieChart size={14} className="text-blue-500 md:w-[18px] md:h-[18px]" />
@@ -106,7 +113,7 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
 
             <div className="grid grid-cols-1 gap-1.5 md:gap-2.5 pl-1">
               {globalStats.details.map((type) => {
-                const typeKey = TYPE_MAP[type.name] || type.name;
+                const typeKey = BOOK_TYPE_MAP[type.name] || type.name;
                 const isActive = !activeFilters.country && activeFilters.bookType === typeKey;
 
                 return (
@@ -134,6 +141,9 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
           {stats.map((region) => {
             const isCountryActive = activeFilters.country === region.country;
             const isSpecificCountryOnly = isCountryActive && !activeFilters.bookType;
+            
+            // 对每个地区的 details 也执行强制排序
+            const sortedRegionDetails = sortDetails(region.details);
 
             return (
               <div key={region.country} className="space-y-2 md:space-y-4">
@@ -154,8 +164,8 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
                 </div>
 
                 <div className="grid grid-cols-1 gap-1.5 md:gap-2.5 pl-1">
-                  {region.details.map((type) => {
-                    const typeKey = TYPE_MAP[type.name] || type.name;
+                  {sortedRegionDetails.map((type) => {
+                    const typeKey = BOOK_TYPE_MAP[type.name] || type.name;
                     const isTypeActive = isCountryActive && activeFilters.bookType === typeKey;
 
                     return (

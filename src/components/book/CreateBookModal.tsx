@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { X, Save, BookOpen, Globe2, Layers, Type } from 'lucide-react';
+import {
+  X, Save, BookOpen,
+  Globe2, Layers, Type, History
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { createBook } from '@/utils/bookApi';
+import { BOOK_COUNTRIES, BOOK_TYPES, createBook, INITIAL_BOOK_FORM } from '@/utils/bookApi';
 
 interface CreateBookModalProps {
   onClose: () => void;
@@ -12,24 +15,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   // 在 CreateBookModal.tsx 或相关组件中修改
-  const [formData, setFormData] = useState<{
-    title: string;
-    author: string;
-    bookType: string;
-    stories: string[];
-    country: string;
-    status: 'read' | 'unread'; // 显式约束类型
-    shortReview: string;
-    longReview?: string;
-  }>({
-    title: '',
-    author: '',
-    bookType: 'novel',
-    stories: [] as string[],
-    country: '中',
-    status: 'read', // 初始值
-    shortReview: ''
-  });
+  const [formData, setFormData] = useState(INITIAL_BOOK_FORM);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +33,8 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
     }
   };
 
-  const countries = ['中', '日', '欧', '俄', '美', '其他'];
-  const bookTypes = [
-    { id: 'novel', label: '中长篇小说', icon: BookOpen },
-    { id: 'collection', label: '短篇作品集', icon: Layers }
-  ];
+  const countries = BOOK_COUNTRIES.map(c => c.trim()); // 去掉前面的空格，保持显示时的美观，但逻辑处理时更简洁
+  const bookTypes = BOOK_TYPES;
 
   // 处理添加短篇
   const addStory = () => setFormData(prev => ({ ...prev, stories: [...prev.stories, ''] }));
@@ -109,6 +92,12 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                 value={formData.author}
                 onChange={e => setFormData({ ...formData, author: e.target.value })}
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2">
+                <History size={12} />年代</label>
+              <input className="w-full bg-gray-100 dark:bg-white/5 rounded-xl px-4 py-3 font-bold" placeholder="如: 1945" value={formData.year}
+                onChange={e => setFormData({ ...formData, year: e.target.value })} />
             </div>
           </div>
 

@@ -1,17 +1,64 @@
+import { BookOpen, Layers } from 'lucide-react';
 import { apiGet, apiPost, apiPut, apiDelete } from './apiCore';
 
+// 1. 后端返回的标准实体（带 _id 和 createdAt）
 export interface Book {
   _id: string;
   title: string;
   author: string;
-  status: 'read' | 'unread';
+  year: string;        // <--- 刚加的年代字段
   country: string;
   bookType: string;
-  stories: string[]; // 同步增加
+  status: 'read' | 'unread';
+  stories: string[];
   shortReview?: string;
   longReview?: string;
   createdAt: string;
+  updatedAt?: string;
 }
+
+// 1. 定义统一的映射和【强顺序】
+export const BOOK_TYPE_MAP: Record<string, string> = { 
+  '中长篇': 'novel', 
+  '短篇集': 'collection', 
+  '诗歌集': 'poetry' 
+};
+export const BOOK_TYPES = [
+    { id: 'novel', label: '中长篇小说', icon: BookOpen },
+    { id: 'collection', label: '短篇作品集', icon: Layers }
+  ];
+  
+export const BOOK_SORT_ORDER = ['中长篇', '短篇集', '诗歌集'];
+
+export const BOOK_COUNTRIES = [' 中国', '日本', '欧洲', '俄罗斯', '美国', '其他'];
+
+// 2. 这里的 Request 类型专门用于 创建(POST) 和 更新(PUT)
+// 这样你就不用在组件里写 Partial<Book> 或者手动拼类型了
+export interface BookRequest {
+  title: string;
+  author: string;
+  year: string;
+  country: string;
+  bookType: string;
+  status: 'read' | 'unread';
+  stories: string[];
+  shortReview: string;
+  longReview?: string;
+}
+
+// 别再到处写字面量了，用这个！
+export const INITIAL_BOOK_FORM: BookRequest = {
+  title: '',
+  author: '',
+  year: '',
+  country: '中国',
+  bookType: 'novel',
+  status: 'read',
+  stories: [],
+  shortReview: '',
+  longReview: ''
+};
+
 export interface BookListResponse {
   success: boolean;
   data: Book[];

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, User, Globe, Tag, MessageSquare, Edit3, Save, RotateCcw, Plus, Trash2, List } from 'lucide-react';
-import { Book, updateBook } from '@/utils/bookApi';
+import {
+  X, BookOpen, User, Globe, Tag,
+  MessageSquare, Edit3, Save,
+  RotateCcw, Plus, Trash2, List, Clock, History
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Book, updateBook, INITIAL_BOOK_FORM } from '@/utils/bookApi';
 
 interface Props {
   book: Book;
@@ -16,14 +20,12 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
   // 初始化表单状态
   const [formData, setFormData] = useState({
-    title: book.title,
-    author: book.author,
-    country: book.country,
-    status: book.status as 'read' | 'unread',
-    bookType: book.bookType || 'novel',
-    stories: book.stories || [],
+    ...INITIAL_BOOK_FORM,
+    ...book,
+    // 强制修正部分可能为 undefined 的可选字段
     shortReview: book.shortReview || '',
-    longReview: book.longReview || ''
+    longReview: book.longReview || '',
+    stories: book.stories || []
   });
 
   // 篇目操作逻辑
@@ -54,7 +56,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
       <div className="relative w-full max-w-3xl bg-white dark:bg-[#0a0a0a] rounded-[40px] shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="p-8 md:p-12 overflow-y-auto max-h-[90vh]">
-          
+
           {/* 头部：标题与基础信息 */}
           <header className="flex justify-between items-start mb-10">
             <div className="flex-1 space-y-4">
@@ -79,9 +81,12 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                   <Globe size={14} className="text-emerald-500" />
                   {isEditing ? (
                     <select className="bg-transparent border-b border-gray-700 focus:outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>
-                      {['中', '日', '欧', '俄', '美', '其他'].map(c => <option key={c} value={c}>{c}</option>)}
+                      {['中国', '日本', '欧洲', '俄罗斯', '美国', '其他'].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   ) : formData.country}
+                </span>
+                <span className="flex items-center gap-2"><History size={14} className="text-purple-500" />
+                  {isEditing ? <input className="bg-transparent border-b border-gray-700 w-20" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}
                 </span>
                 <span className="flex items-center gap-2">
                   <Tag size={14} className="text-orange-500" />
@@ -92,7 +97,18 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                     </select>
                   ) : (formData.status === 'read' ? 'ARCHIVED / 已阅' : 'PENDING / 待读')}
                 </span>
+                <span className="flex items-center gap-2 border-l border-gray-800 pl-6">
+                  <Clock size={14} className="text-gray-500" />
+                  创建时间 / {new Date(book.createdAt).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
               </div>
+
             </div>
 
             <div className="flex gap-3 ml-6">
@@ -110,14 +126,14 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
             <div className="md:col-span-12 space-y-10">
-              
+
               {/* 短篇集篇目展示/编辑区 */}
               {formData.bookType === 'collection' && (
                 <section className="bg-blue-600/5 rounded-[32px] p-8 border border-blue-500/10">
                   <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-6">
                     <List size={14} /> 收录篇目 / Stories Inventory
                   </h4>
-                  
+
                   {isEditing ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -134,7 +150,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                             </button>
                           </div>
                         ))}
-                        <button 
+                        <button
                           onClick={addStory}
                           className="flex items-center justify-center gap-2 border-2 border-dashed border-blue-500/30 rounded-xl py-2 text-blue-500 hover:bg-blue-500/10 transition-all text-[10px] font-black uppercase"
                         >
