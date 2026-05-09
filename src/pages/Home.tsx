@@ -139,9 +139,9 @@ const Home: React.FC = () => {
         <section className="px-4 home-animate">
           <div className="inline-flex items-center space-x-4 mb-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-sm">
             <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(37,99,235,1)]"></div>
-            <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">置顶星火</h2>
+            <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">置顶</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 p-4">
             {pinnedPosts.map(post => <PostCard key={post.id} post={post} />)}
           </div>
         </section>
@@ -150,9 +150,9 @@ const Home: React.FC = () => {
       <section className="px-4 home-animate">
         <div className="inline-flex items-center space-x-4 mb-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-sm">
           <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">最新同步</h2>
+          <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">最新</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
+        <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 p-4">
           {posts.map(post => (
             <PostCard key={post.id} post={post} />
           ))}

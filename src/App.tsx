@@ -29,15 +29,13 @@ const AdminPending = lazy(() => import('@/pages/AdminPending'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 const AppLayout = () => {
-  const { hideSidebars } = useLayout();
+  const { hideSidebars } = useLayout(); // 借用这个状态，或者你可以去 LayoutContext 加个 hideHeader
 
   return (
     <BackgroundLayout>
-      
       <div className="flex flex-col min-h-screen">
         <div className="flex-1 flex w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 gap-4">
           
-          {/* 左侧栏：移除 w-64 xl:w-80，让 LeftSidebar 自身控制宽度 */}
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">
@@ -47,7 +45,9 @@ const AppLayout = () => {
           )}
 
           <div className="flex-1 min-w-0 flex flex-col">
-            <Header />
+            {/* 💡 关键：如果是全屏模式（MyBooks），隐藏全局 Header */}
+            {!hideSidebars && <Header />} 
+            
             <main className="flex-1">
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
@@ -64,10 +64,11 @@ const AppLayout = () => {
                 </Routes>
               </Suspense>
             </main>
-            <Footer />
+
+            {/* 💡 关键：全屏模式下 Footer 也可以考虑藏掉或精简 */}
+            {!hideSidebars && <Footer />}
           </div>
 
-          {/* 右侧栏 */}
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">

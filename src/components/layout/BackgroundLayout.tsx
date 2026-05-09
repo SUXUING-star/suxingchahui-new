@@ -60,7 +60,7 @@ const BackgroundLayout: React.FC<BackgroundLayoutProps> = ({ children }) => {
       />
       
       <div 
-        className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[2px] dark:backdrop-blur-[2.5px] transition-all duration-300 z-[-1]"
+        className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-[4px] dark:backdrop-blur-[4px] transition-all duration-300 z-[-1]"
         aria-hidden="true"
       />
 

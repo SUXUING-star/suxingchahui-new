@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
+import anime from 'animejs';
 import {
   X, BookOpen, User, Globe, Tag,
   MessageSquare, Edit3, Save,
   RotateCcw, Plus, Trash2, List, Clock, History
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Book, updateBook, INITIAL_BOOK_FORM } from '@/utils/bookApi';
+import { Book, updateBook, INITIAL_BOOK_FORM, BOOK_COUNTRIES } from '@/utils/bookApi';
 
 interface Props {
   book: Book;
@@ -17,24 +19,48 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
   const { token } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // 初始化表单状态
   const [formData, setFormData] = useState({
     ...INITIAL_BOOK_FORM,
     ...book,
-    // 强制修正部分可能为 undefined 的可选字段
     shortReview: book.shortReview || '',
     longReview: book.longReview || '',
     stories: book.stories || []
   });
 
-  // 篇目操作逻辑
-  const addStory = () => setFormData(p => ({ ...p, stories: [...p.stories, ''] }));
-  const removeStory = (index: number) => setFormData(p => ({ ...p, stories: p.stories.filter((_, i) => i !== index) }));
-  const updateStory = (index: number, val: string) => {
-    const newStories = [...formData.stories];
-    newStories[index] = val;
-    setFormData({ ...formData, stories: newStories });
+  const modalRef = useRef(null);
+  const backdropRef = useRef(null);
+
+  // 入场动画
+  useEffect(() => {
+    anime({
+      targets: backdropRef.current,
+      opacity: [0, 1],
+      duration: 300,
+      easing: 'linear'
+    });
+    anime({
+      targets: modalRef.current,
+      scale: [0.9, 1],
+      translateY: [40, 0],
+      opacity: [0, 1],
+      duration: 800,
+      easing: 'easeOutElastic(1, .8)',
+      complete: (anim) => {
+        // 清理样式防止磨砂 Bug
+        anim.animatables.forEach(a => (a.target as HTMLElement).style.transform = '');
+      }
+    });
+  }, []);
+
+  const handleClose = () => {
+    anime({
+      targets: [modalRef.current, backdropRef.current],
+      opacity: 0,
+      scale: 0.9,
+      duration: 200,
+      easing: 'easeInQuad',
+      complete: onClose
+    });
   };
 
   const handleUpdate = async () => {
@@ -44,188 +70,124 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
       setIsEditing(false);
       if (onRefresh) onRefresh();
     } catch (err) {
-      alert('档案同步失败');
+      alert('同步失败');
     } finally {
       setLoading(false);
     }
   };
 
+  // 篇目操作
+  const updateStory = (idx: number, val: string) => {
+    const s = [...formData.stories]; s[idx] = val; setFormData({ ...formData, stories: s });
+  };
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={onClose}></div>
+      {/* 遮罩 */}
+      <div ref={backdropRef} className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={handleClose} />
 
-      <div className="relative w-full max-w-3xl bg-white dark:bg-[#0a0a0a] rounded-[40px] shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-8 md:p-12 overflow-y-auto max-h-[90vh]">
+      {/* 弹窗主体 */}
+      <div ref={modalRef} className="relative w-full max-w-3xl bg-white dark:bg-[#0a0a0a] rounded-[40px] shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden">
+        
+        {/* 固定头部岛屿 */}
+        <header className="p-6 md:p-10 pb-4 flex justify-between items-start shrink-0">
+          <div className="flex-1 space-y-4">
+            {isEditing ? (
+              <input
+                className="text-2xl md:text-4xl font-black italic text-blue-600 bg-gray-100 dark:bg-white/5 border-none rounded-2xl px-4 py-2 w-full outline-none focus:ring-2 ring-blue-500"
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+              />
+            ) : (
+              <h2 className="text-2xl md:text-4xl font-black italic text-blue-600 tracking-tight">{formData.title}</h2>
+            )}
 
-          {/* 头部：标题与基础信息 */}
-          <header className="flex justify-between items-start mb-10">
-            <div className="flex-1 space-y-4">
-              {isEditing ? (
-                <input
-                  className="text-4xl font-black tracking-tighter uppercase italic text-blue-600 bg-gray-100 dark:bg-white/5 border-none rounded-2xl px-5 py-3 w-full focus:ring-2 ring-blue-500 transition-all"
-                  value={formData.title}
-                  onChange={e => setFormData({ ...formData, title: e.target.value })}
-                />
-              ) : (
-                <h2 className="text-4xl font-black tracking-tighter uppercase italic text-blue-600">{formData.title}</h2>
-              )}
-
-              <div className="flex flex-wrap gap-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                <span className="flex items-center gap-2">
-                  <User size={14} className="text-blue-500" />
-                  {isEditing ? (
-                    <input className="bg-transparent border-b border-gray-700 focus:outline-none focus:border-blue-500 pb-1" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} />
-                  ) : formData.author}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Globe size={14} className="text-emerald-500" />
-                  {isEditing ? (
-                    <select className="bg-transparent border-b border-gray-700 focus:outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>
-                      {['中国', '日本', '欧洲', '俄罗斯', '美国', '其他'].map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  ) : formData.country}
-                </span>
-                <span className="flex items-center gap-2"><History size={14} className="text-purple-500" />
-                  {isEditing ? <input className="bg-transparent border-b border-gray-700 w-20" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Tag size={14} className="text-orange-500" />
-                  {isEditing ? (
-                    <select className="bg-transparent border-b border-gray-700 focus:outline-none uppercase" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value as any })}>
-                      <option value="read">已阅</option>
-                      <option value="unread">待读</option>
-                    </select>
-                  ) : (formData.status === 'read' ? 'ARCHIVED / 已阅' : 'PENDING / 待读')}
-                </span>
-                <span className="flex items-center gap-2 border-l border-gray-800 pl-6">
-                  <Clock size={14} className="text-gray-500" />
-                  创建时间 / {new Date(book.createdAt).toLocaleString('zh-CN', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
-              </div>
-
-            </div>
-
-            <div className="flex gap-3 ml-6">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`p-4 rounded-2xl transition-all ${isEditing ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/20' : 'bg-gray-100 dark:bg-white/5 hover:scale-110'}`}
-              >
-                {isEditing ? <RotateCcw size={20} /> : <Edit3 size={20} />}
-              </button>
-              <button onClick={onClose} className="p-4 hover:bg-red-500 hover:text-white dark:bg-white/5 rounded-2xl transition-all">
-                <X size={20} />
-              </button>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div className="md:col-span-12 space-y-10">
-
-              {/* 短篇集篇目展示/编辑区 */}
-              {formData.bookType === 'collection' && (
-                <section className="bg-blue-600/5 rounded-[32px] p-8 border border-blue-500/10">
-                  <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-6">
-                    <List size={14} /> 收录篇目 / Stories Inventory
-                  </h4>
-
-                  {isEditing ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {formData.stories.map((story, idx) => (
-                          <div key={idx} className="flex items-center gap-2 bg-white dark:bg-black/20 p-2 rounded-xl border border-white/10">
-                            <input
-                              className="flex-1 bg-transparent border-none text-xs font-bold focus:ring-0"
-                              value={story}
-                              onChange={e => updateStory(idx, e.target.value)}
-                              placeholder={`篇目 #${idx + 1}`}
-                            />
-                            <button onClick={() => removeStory(idx)} className="text-gray-400 hover:text-red-500 p-1">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={addStory}
-                          className="flex items-center justify-center gap-2 border-2 border-dashed border-blue-500/30 rounded-xl py-2 text-blue-500 hover:bg-blue-500/10 transition-all text-[10px] font-black uppercase"
-                        >
-                          <Plus size={14} /> 增补篇目
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {formData.stories.length > 0 ? formData.stories.map((s, i) => (
-                        <span key={i} className="px-4 py-2 bg-white dark:bg-white/5 rounded-xl text-[11px] font-bold italic text-gray-400 border border-white/5">
-                          {s}
-                        </span>
-                      )) : <span className="text-xs text-gray-600 italic">尚未录入具体篇目信息</span>}
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {/* 核心简评 */}
-              <section>
-                <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-[0.3em] mb-4">
-                  <BookOpen size={14} /> 核心简评 / Summary
-                </h4>
-                {isEditing ? (
-                  <textarea
-                    className="w-full text-lg italic font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-white/5 p-8 rounded-[32px] border-none focus:ring-2 ring-blue-500 min-h-[140px] transition-all"
-                    value={formData.shortReview}
-                    onChange={e => setFormData({ ...formData, shortReview: e.target.value })}
-                  />
-                ) : (
-                  <div className="relative group">
-                    <div className="absolute -left-4 top-0 bottom-0 w-1.5 bg-blue-600 rounded-full shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
-                    <p className="text-xl italic font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-white/5 p-8 rounded-[32px] leading-relaxed">
-                      “{formData.shortReview || '暂无速记简评。'}”
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              {/* 深度长评 */}
-              <section>
-                <h4 className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] mb-4">
-                  <MessageSquare size={14} /> 深度分析 / Long Review
-                </h4>
-                {isEditing ? (
-                  <textarea
-                    className="w-full text-sm leading-relaxed text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/5 p-8 rounded-[32px] min-h-[300px] border-none focus:ring-2 ring-emerald-500 transition-all"
-                    value={formData.longReview}
-                    onChange={e => setFormData({ ...formData, longReview: e.target.value })}
-                    placeholder="在此录入针对该文献的深度解构内容..."
-                  />
-                ) : (
-                  <div className="text-sm leading-[1.8] text-gray-500 dark:text-gray-400 whitespace-pre-wrap px-4 font-medium">
-                    {formData.longReview || '该文献尚未进行深度长篇分析存档。'}
-                  </div>
-                )}
-              </section>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              <span className="flex items-center gap-1.5"><User size={14} className="text-blue-500" /> {isEditing ? <input className="bg-transparent border-b border-gray-600 outline-none" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} /> : formData.author}</span>
+              <span className="flex items-center gap-1.5"><Globe size={14} className="text-emerald-500" /> {isEditing ? <select className="bg-transparent border-b border-gray-600 outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>{BOOK_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}</select> : formData.country}</span>
+              <span className="flex items-center gap-1.5"><History size={14} className="text-purple-500" /> {isEditing ? <input className="bg-transparent border-b border-gray-600 w-16 outline-none" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}</span>
+              <span className="flex items-center gap-1.5"><Clock size={14} /> {new Date(book.createdAt).toLocaleDateString()} 记录</span>
             </div>
           </div>
 
-          {/* 保存触发区 */}
-          {isEditing && (
-            <footer className="mt-12 flex justify-end">
-              <button
-                onClick={handleUpdate}
-                disabled={loading}
-                className="group flex items-center gap-3 bg-blue-600 text-white px-10 py-5 rounded-[24px] font-black text-[12px] uppercase tracking-[0.3em] hover:scale-105 active:scale-95 shadow-2xl shadow-blue-500/40 transition-all disabled:opacity-50"
-              >
-                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={20} />}
-                确认同步档案
-              </button>
-            </footer>
+          <div className="flex gap-2 ml-4">
+            <button onClick={() => setIsEditing(!isEditing)} className={`p-3 rounded-xl transition-all ${isEditing ? 'bg-orange-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-white/5 hover:scale-110'}`}>
+              {isEditing ? <RotateCcw size={20} /> : <Edit3 size={20} />}
+            </button>
+            <button onClick={handleClose} className="p-3 hover:bg-red-500 hover:text-white dark:bg-white/5 rounded-xl transition-all"><X size={20} /></button>
+          </div>
+        </header>
+
+        {/* 内容滚动区 */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-2 space-y-10 custom-scrollbar">
+          
+          {/* 篇目岛屿 (仅短篇集显示) */}
+          {formData.bookType === 'collection' && (
+            <section className="bg-blue-600/5 rounded-[32px] p-6 border border-blue-500/10">
+              <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4"><List size={14} /> 收录篇目</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {formData.stories.map((story, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-white dark:bg-black/20 p-2 rounded-xl border border-white/10 shadow-sm">
+                    {isEditing ? (
+                      <>
+                        <input className="flex-1 bg-transparent border-none text-[11px] font-bold outline-none" value={story} onChange={e => updateStory(idx, e.target.value)} />
+                        <button onClick={() => setFormData(p => ({ ...p, stories: p.stories.filter((_, i) => i !== idx) }))} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      </>
+                    ) : (
+                      <span className="text-[11px] font-bold text-gray-500 truncate px-2">{story}</span>
+                    )}
+                  </div>
+                ))}
+                {isEditing && (
+                  <button onClick={() => setFormData(p => ({ ...p, stories: [...p.stories, ''] }))} className="flex items-center justify-center gap-2 border-2 border-dashed border-blue-500/20 rounded-xl py-2 text-blue-500 hover:bg-blue-500/5 transition-all text-[10px] font-black">
+                    <Plus size={14} /> 新增篇目
+                  </button>
+                )}
+              </div>
+            </section>
           )}
+
+          {/* 阅读随笔 */}
+          <section className="space-y-4">
+            <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest"><BookOpen size={14} /> 阅读随笔</h4>
+            {isEditing ? (
+              <textarea className="w-full text-sm font-bold text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-white/5 p-6 rounded-3xl border-none outline-none focus:ring-2 ring-blue-500/30 min-h-[120px]" value={formData.shortReview} onChange={e => setFormData({ ...formData, shortReview: e.target.value })} />
+            ) : (
+              <div className="relative pl-6">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
+                <p className="text-lg italic font-bold text-gray-700 dark:text-gray-300 leading-relaxed">
+                  “{formData.shortReview || '暂无阅读随笔。'}”
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* 详细记录 */}
+          <section className="space-y-4">
+            <h4 className="flex items-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest"><MessageSquare size={14} /> 详细记录</h4>
+            {isEditing ? (
+              <textarea className="w-full text-sm leading-relaxed text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 p-6 rounded-3xl min-h-[250px] outline-none focus:ring-2 ring-emerald-500/30" value={formData.longReview} onChange={e => setFormData({ ...formData, longReview: e.target.value })} placeholder="录入深度的分析内容..." />
+            ) : (
+              <div className="text-sm leading-relaxed text-gray-500 dark:text-gray-400 whitespace-pre-wrap font-medium px-2">
+                {formData.longReview || '暂无详细记录存档。'}
+              </div>
+            )}
+          </section>
         </div>
+
+        {/* 固定底部岛屿 */}
+        {isEditing && (
+          <footer className="p-6 md:p-8 border-t border-gray-100 dark:border-white/5 shrink-0 flex justify-end bg-gray-50/50 dark:bg-white/2">
+            <button
+              onClick={handleUpdate}
+              disabled={loading}
+              className="flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-xl shadow-blue-500/30 transition-all disabled:opacity-50"
+            >
+              {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={18} />}
+              确认保存修改
+            </button>
+          </footer>
+        )}
       </div>
     </div>
   );

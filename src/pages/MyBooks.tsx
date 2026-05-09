@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, ChevronLeft, ChevronRight, Library, Settings2, X, Filter, Download, Inbox, Search } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Library, Settings2, X, Filter, Download, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLayout } from '@/context/LayoutContext';
 import { getBooksFiltered, deleteBooks, getBookStats, Book } from '@/utils/bookApi';
@@ -10,18 +11,17 @@ import BookDetailModal from '@/components/book/BookDetailModal';
 import BookStatsSidebar from '@/components/book/BookStatsSidebar';
 import CreateBookModal from '@/components/book/CreateBookModal';
 import ExportModal from '@/components/book/ExportModal';
+import StatusPlaceholder from '@/components/common/StatusPlaceholder';
 
 const MyBooks: React.FC = () => {
   const { token } = useAuth();
   const { setHideSidebars } = useLayout();
 
-  // --- 核心状态 ---
   const [books, setBooks] = useState<Book[]>([]);
   const [stats, setStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
 
-  // --- 筛选与弹窗状态 ---
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<{ country?: string; bookType?: string; search?: string }>({});
 
@@ -31,13 +31,24 @@ const MyBooks: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  // 1. 布局副作用
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <StatusPlaceholder 
+          type="denied" 
+          title="访问受限" 
+          message="请登录后查看您的个人书单" 
+          showHome={true} 
+        />
+      </div>
+    );
+  }
+
   useEffect(() => {
     setHideSidebars(true);
     return () => setHideSidebars(false);
   }, [setHideSidebars]);
 
-  // 2. 数据获取核心
   const fetchData = useCallback(async (targetPage: number) => {
     setLoading(true);
     try {
@@ -45,25 +56,22 @@ const MyBooks: React.FC = () => {
         getBooksFiltered(targetPage, filters, token),
         getBookStats(token)
       ]);
-
       setBooks(bookRes.data);
       setPagination(bookRes.pagination);
       setStats(statsRes.data);
     } catch (err) {
-      console.error('Data Fetch Error:', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   }, [token, filters]);
 
-  // 3. 监听筛选器变化
   useEffect(() => {
     fetchData(1);
   }, [filters, fetchData]);
 
-  // 4. 执行物理粉碎
   const execDelete = async () => {
-    if (!window.confirm(`警告：确认永久粉碎这 ${selectedIds.length} 条馆藏记录？`)) return;
+    if (!window.confirm(`确定要删除这 ${selectedIds.length} 条记录吗？`)) return;
     try {
       await deleteBooks(selectedIds, token);
       setSelectedIds([]);
@@ -75,83 +83,84 @@ const MyBooks: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-4 md:py-8 text-gray-800 dark:text-white min-h-screen pb-24">
-
-      {/* 顶部：战略控制台 */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-8">
-        <div className="space-y-1 md:space-y-2">
-          <h1 className="text-2xl md:text-5xl font-black tracking-tighter italic flex items-center gap-2 md:gap-4">
-            <Library size={32} className="text-blue-600 md:w-12 md:h-12 shrink-0" />
-            <span className="truncate">个人<span className="text-blue-600">阅读记录</span></span>
-          </h1>
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="h-[1px] w-8 md:w-12 bg-blue-600/30"></div>
-            <span className="text-[8px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] md:tracking-[0.4em]">
-              DATABASE TOTAL: {pagination.total} ENTRIES
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 text-gray-900 dark:text-white min-h-screen pb-32">
+      
+      {/* 顶部布局：两个独立的磨砂容器岛屿 */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-10">
+        
+        {/* 左岛屿：标题区 */}
+        <div className="flex items-center gap-4 px-6 py-3 rounded-[24px] bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-sm">
+          <div className="p-2 bg-blue-600 rounded-xl">
+            <Library size={20} className="text-white" />
+          </div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-xl md:text-2xl font-black tracking-tight whitespace-nowrap">
+              个人<span className="text-blue-600">阅读记录</span>
+            </h1>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-l border-gray-200 dark:border-white/10 pl-3">
+              已读共计 {pagination.total} 本
             </span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+        {/* 右岛屿：控制区 */}
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 px-4 py-3 rounded-[24px] bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-sm">
+          {!isSelectMode && (
+            <div className="relative group">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+              <input 
+                type="text"
+                placeholder="快速检索..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && setFilters(prev => ({ ...prev, search }))}
+                className="bg-gray-100/50 dark:bg-white/10 border-none focus:ring-2 focus:ring-blue-500/20 rounded-xl py-2 pl-9 pr-4 text-xs font-bold outline-none w-32 md:w-48 transition-all"
+              />
+            </div>
+          )}
+
           {isSelectMode ? (
-            <div className="flex items-center gap-1.5 md:gap-2 bg-red-500/5 p-1 md:p-2 rounded-xl md:rounded-[24px] border border-red-500/20 animate-in slide-in-from-right-4">
+            <div className="flex items-center gap-2 animate-in slide-in-from-right-2">
               <button
                 onClick={execDelete}
                 disabled={selectedIds.length === 0}
-                className="bg-red-600 text-white px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest disabled:opacity-30 hover:bg-red-700 transition-all shadow-lg shadow-red-900/20"
+                className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-[11px] hover:bg-red-600 transition-all"
               >
-                粉碎 ({selectedIds.length})
+                删除 ({selectedIds.length})
               </button>
-              <button onClick={() => { setIsSelectMode(false); setSelectedIds([]); }} className="px-3 md:px-5 py-2 md:py-3 text-[9px] md:text-[11px] font-black uppercase text-gray-500 hover:text-white transition-colors">
+              <button onClick={() => { setIsSelectMode(false); setSelectedIds([]); }} className="px-3 py-2 text-[11px] font-bold text-gray-500">
                 取消
               </button>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2 md:gap-3">
-              <button onClick={() => setIsSelectMode(true)} className="flex items-center gap-1.5 md:gap-2 bg-gray-100 dark:bg-white/5 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all border border-transparent">
-                <Settings2 size={14} className="md:w-4 md:h-4" /> 批量
+            <>
+              <button onClick={() => setIsSelectMode(true)} className="flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-white transition-all border border-gray-100 dark:border-transparent">
+                <Settings2 size={14} /> 批量
               </button>
-              <div className="relative flex items-center group">
-                <input 
-                  type="text"
-                  placeholder="搜索..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && setFilters(prev => ({ ...prev, search }))}
-                  className="bg-gray-100 dark:bg-white/5 border border-transparent focus:border-blue-600/50 rounded-lg md:rounded-2xl py-2 md:py-2.5 pl-8 md:pl-10 pr-2 md:pr-4 text-[9px] md:text-[11px] font-black uppercase outline-none w-24 md:w-36 focus:w-32 transition-all"
-                />
-                <Search size={12} className="absolute left-2.5 md:left-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-              </div>
-              {/* 这里是之前丢掉的导出按钮，接回来了！ */}
-              <button onClick={() => setIsExportModalOpen(true)} className="flex items-center gap-1.5 md:gap-2 bg-gray-100 dark:bg-white/5 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest hover:bg-white/10 transition-all border border-transparent">
+              <button onClick={() => setIsExportModalOpen(true)} className="hidden sm:flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] hover:bg-white transition-all border border-gray-100 dark:border-transparent">
                 <Download size={14} /> 导出
               </button>
-              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-1.5 md:gap-2 bg-blue-600 text-white px-3 md:px-8 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[11px] uppercase tracking-widest hover:scale-105 shadow-xl shadow-blue-500/30 transition-all">
-                <Plus size={16} /> 录入
+              <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1"></div>
+              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-xl font-bold text-[11px] hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95">
+                <Plus size={16} /> 记录新书
               </button>
-            </div>
+            </>
           )}
         </div>
-      </header>
+      </div>
 
-      {/* --- 强制左右分栏 --- */}
-      <div className="flex flex-row gap-2 md:gap-12">
-
-        <aside className="w-[70px] sm:w-[100px] md:w-64 lg:w-72 flex-shrink-0">
+      {/* 下方主体布局 */}
+      <div className="flex flex-col md:flex-row gap-8 mt-4">
+        <aside className="w-full md:w-64 shrink-0">
           <BookStatsSidebar stats={stats} activeFilters={filters} onFilterChange={setFilters} />
         </aside>
 
         <main className="flex-1 min-w-0">
-          {(filters.country || filters.bookType) && (
-            <div className="mb-4 flex items-center gap-2 animate-in fade-in slide-in-from-left-4">
-              <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg md:rounded-2xl shadow-lg">
-                <Filter size={12} className="shrink-0" />
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest truncate">
-                  {filters.country || 'ALL'} / {filters.bookType || 'ALL'}
-                </span>
-                <button onClick={() => setFilters({})} className="ml-1 hover:rotate-90 transition-transform bg-white/20 rounded-full p-0.5">
-                  <X size={12} />
-                </button>
+          {(filters.country || filters.bookType || filters.search) && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <div className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-[10px] font-bold">
+                <span>筛选: {filters.country || '全部'} · {filters.bookType || '全部'}</span>
+                <button onClick={() => {setFilters({}); setSearch('');}}><X size={12} /></button>
               </div>
             </div>
           )}
@@ -159,32 +168,28 @@ const MyBooks: React.FC = () => {
           {loading ? (
             <div className="min-h-[300px] flex items-center justify-center"><LoadingSpinner /></div>
           ) : (
-            <>
-              {/* ⚠️ 网格改为 grid-cols-3，让卡片宽度被压缩，自然形成竖向效果 */}
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2 md:gap-4">
-                {books.map(book => (
-                  <BookCard
-                    key={book._id}
-                    book={book}
-                    isSelectMode={isSelectMode}
-                    isSelected={selectedIds.includes(book._id)}
-                    onToggleSelect={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
-                    onClick={setDetailBook}
-                  />
-                ))}
-              </div>
+            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+              {books.map(book => (
+                <BookCard
+                  key={book._id}
+                  book={book}
+                  isSelectMode={isSelectMode}
+                  isSelected={selectedIds.includes(book._id)}
+                  onToggleSelect={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
+                  onClick={setDetailBook}
+                />
+              ))}
+            </div>
+          )}
 
-              {pagination.pages > 1 && (
-                <nav className="flex justify-center items-center gap-4 mt-12 md:mt-20">
-                  <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-2 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all"><ChevronLeft size={20} className="md:w-7 md:h-7" /></button>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[8px] md:text-[10px] font-black uppercase text-gray-500">PAGE</span>
-                    <span className="text-sm md:text-2xl font-black italic">{pagination.page} / {pagination.pages}</span>
-                  </div>
-                  <button disabled={pagination.page === pagination.pages} onClick={() => fetchData(pagination.page + 1)} className="p-2 md:p-6 bg-white dark:bg-white/5 rounded-xl md:rounded-[32px] border border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all"><ChevronRight size={20} className="md:w-7 md:h-7" /></button>
-                </nav>
-              )}
-            </>
+          {pagination.pages > 1 && (
+            <nav className="flex justify-center items-center gap-6 mt-16">
+              <button disabled={pagination.page === 1} onClick={() => fetchData(pagination.page - 1)} className="p-3 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><ChevronLeft size={20} /></button>
+              <div className="text-center">
+                <span className="text-lg font-black italic">{pagination.page} / {pagination.pages}</span>
+              </div>
+              <button disabled={pagination.page === pagination.pages} onClick={() => fetchData(pagination.page + 1)} className="p-3 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 disabled:opacity-20 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><ChevronRight size={20} /></button>
+            </nav>
           )}
         </main>
       </div>
