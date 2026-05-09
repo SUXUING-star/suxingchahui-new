@@ -27,10 +27,10 @@ export const BOOK_TYPES = [
     { id: 'novel', label: '中长篇小说', icon: BookOpen },
     { id: 'collection', label: '短篇作品集', icon: Layers }
   ];
-  
+
 export const BOOK_SORT_ORDER = ['中长篇', '短篇集', '诗歌集'];
 
-export const BOOK_COUNTRIES = [' 中国', '日本', '欧洲', '俄罗斯', '美国', '其他'];
+export const BOOK_COUNTRIES = [' 中国', '日本', '欧洲', '俄罗斯', '美洲', '其他'];
 
 // 2. 这里的 Request 类型专门用于 创建(POST) 和 更新(PUT)
 // 这样你就不用在组件里写 Partial<Book> 或者手动拼类型了
