@@ -104,6 +104,12 @@ const MyBooks: React.FC = () => {
     return () => setHideSidebars(false);
   }, [setHideSidebars]);
 
+   // --- 新增：回顶逻辑 ---
+  useEffect(() => {
+    // 只要筛选条件（国家、类型、搜索词）发生变化，就滚动回顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [filters]);
+
   const execDelete = async () => {
     if (!window.confirm(`确定要删除这 ${selectedIds.length} 条记录吗？`)) return;
     try {

@@ -24,8 +24,9 @@ export const BOOK_TYPE_MAP: Record<string, string> = {
   '诗歌集': 'poetry' 
 };
 export const BOOK_TYPES = [
-    { id: 'novel', label: '中长篇小说', icon: BookOpen },
-    { id: 'collection', label: '短篇作品集', icon: Layers }
+    { id: 'novel', label: '中长篇', icon: BookOpen },
+    { id: 'collection', label: '短篇集', icon: Layers },
+    { id: 'poetry', label: '诗歌集', icon: Layers }
   ];
 
 export const BOOK_SORT_ORDER = ['中长篇', '短篇集', '诗歌集'];

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import anime from 'animejs';
 import {
@@ -7,7 +6,7 @@ import {
   RotateCcw, Plus, Trash2, List, Clock, History, CheckCircle2, Circle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { Book, updateBook, INITIAL_BOOK_FORM, BOOK_COUNTRIES } from '@/utils/bookApi';
+import { Book, updateBook, INITIAL_BOOK_FORM, BOOK_COUNTRIES, BOOK_TYPES } from '@/utils/bookApi';
 
 interface Props {
   book: Book;
@@ -46,7 +45,6 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
       duration: 800,
       easing: 'easeOutElastic(1, .8)',
       complete: (anim) => {
-        // 清理样式防止磨砂 Bug
         anim.animatables.forEach(a => (a.target as HTMLElement).style.transform = '');
       }
     });
@@ -76,7 +74,6 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
     }
   };
 
-  // 篇目操作
   const updateStory = (idx: number, val: string) => {
     const s = [...formData.stories]; s[idx] = val; setFormData({ ...formData, stories: s });
   };
@@ -122,10 +119,50 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
               <h2 className="text-2xl md:text-4xl font-black italic text-blue-600 tracking-tight">{formData.title}</h2>
             )}
 
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black text-gray-500 uppercase tracking-widest">
-              <span className="flex items-center gap-1.5"><User size={14} className="text-blue-500" /> {isEditing ? <input className="bg-transparent border-b border-gray-600 outline-none" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} /> : formData.author}</span>
-              <span className="flex items-center gap-1.5"><Globe size={14} className="text-emerald-500" /> {isEditing ? <select className="bg-transparent border-b border-gray-600 outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>{BOOK_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}</select> : formData.country}</span>
-              <span className="flex items-center gap-1.5"><History size={14} className="text-purple-500" /> {isEditing ? <input className="bg-transparent border-b border-gray-600 w-16 outline-none" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}</span>
+            {/* 元数据展示与编辑区 */}
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              {/* 作者 */}
+              <span className="flex items-center gap-1.5">
+                <User size={14} className="text-blue-500" /> 
+                {isEditing ? <input className="bg-transparent border-b border-gray-600 outline-none" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} /> : formData.author}
+              </span>
+
+              {/* 体裁 - 新增编辑逻辑 */}
+              <span className="flex items-center gap-1.5">
+                <Tag size={14} className="text-pink-500" />
+                {isEditing ? (
+                  <div className="flex gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
+                    {BOOK_TYPES.map(type => (
+                      <button
+                        key={type.id}
+                        onClick={() => setFormData({ ...formData, bookType: type.id })}
+                        className={`px-2 py-0.5 rounded text-[9px] font-black transition-all ${formData.bookType === type.id ? 'bg-pink-500 text-white shadow-sm' : 'text-gray-400'}`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  BOOK_TYPES.find(t => t.id === formData.bookType)?.label || '未知体裁'
+                )}
+              </span>
+
+              {/* 地区 */}
+              <span className="flex items-center gap-1.5">
+                <Globe size={14} className="text-emerald-500" /> 
+                {isEditing ? (
+                  <select className="bg-transparent border-b border-gray-600 outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>
+                    {BOOK_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                ) : formData.country}
+              </span>
+
+              {/* 年代 */}
+              <span className="flex items-center gap-1.5">
+                <History size={14} className="text-purple-500" /> 
+                {isEditing ? <input className="bg-transparent border-b border-gray-600 w-16 outline-none" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}
+              </span>
+              
               <span className="flex items-center gap-1.5"><Clock size={14} /> {new Date(book.createdAt).toLocaleDateString()} 记录</span>
             </div>
           </div>
@@ -141,7 +178,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
         {/* 内容滚动区 */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-2 space-y-10 custom-scrollbar">
 
-          {/* 篇目岛屿 (仅短篇集显示) */}
+          {/* 篇目岛屿 (如果是短篇集则显示) */}
           {formData.bookType === 'collection' && (
             <section className="bg-blue-600/5 rounded-[32px] p-6 border border-blue-500/10">
               <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4"><List size={14} /> 收录篇目</h4>

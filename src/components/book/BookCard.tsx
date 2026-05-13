@@ -21,12 +21,12 @@ const BookCard: React.FC<BookCardProps> = ({ book, isSelected, isSelectMode, onT
         return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     };
 
-    // 动态字号逻辑
+    // 动态字号逻辑 - 已经调小
     const getTitleFontSize = (title: string) => {
         const len = title.length;
-        if (len <= 5) return 'text-[13px] md:text-xl';
-        if (len <= 10) return 'text-[11px] md:text-lg';
-        return 'text-[10px] md:text-base';
+        if (len <= 5) return 'text-[11px] md:text-lg';    // 原来是 13px / xl
+        if (len <= 10) return 'text-[10px] md:text-base';  // 原来是 11px / lg
+        return 'text-[9px] md:text-[14px]';               // 原来是 10px / base
     };
 
     return (

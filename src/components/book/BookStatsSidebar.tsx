@@ -57,6 +57,9 @@ const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChang
     };
   }, [stats]);
 
+
+  
+
   return (
     <div className="w-full space-y-4">
       
