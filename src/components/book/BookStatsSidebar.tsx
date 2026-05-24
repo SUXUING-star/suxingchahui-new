@@ -1,223 +1,209 @@
-import React, { useMemo } from 'react';
-import { PieChart, Layers, Globe, CheckCircle2, Circle } from 'lucide-react';
-import { BOOK_SORT_ORDER, BOOK_TYPE_MAP } from '@/utils/bookApi';
+import React, { useMemo, useState } from 'react';
+import { Layers, Globe, Users, Clock, PieChart, ChevronDown, ChevronUp, X, BarChart3 } from 'lucide-react';
+import { BOOK_SORT_ORDER, BOOK_TYPE_MAP, BOOK_COUNTRIES } from '@/utils/bookApi';
 
-interface StatDetail {
-  name: string;
-  read: number;
-  unread: number;
-}
-
+type ViewMode = 'type' | 'author' | 'year';
+interface StatItem { name: string; read: number; unread: number; }
 interface RegionStat {
   country: string;
   totalRead: number;
   totalUnread: number;
-  details: StatDetail[];
+  typeDetails: StatItem[];
+  authorDetails: StatItem[];
+  yearDetails: StatItem[];
 }
 
 interface Props {
   stats: RegionStat[];
-  activeFilters: { country?: string; bookType?: string };
-  onFilterChange: (filters: { country?: string; bookType?: string }) => void;
+  activeFilters: { country?: string; bookType?: string; author?: string; year?: string; [k: string]: any };
+  onFilterChange: (f: any) => void;
 }
 
-// 排序函数：确保 中长篇 -> 短篇集 -> 诗歌 的顺序
-const sortDetails = (details: StatDetail[]) => {
-  return [...details].sort((a, b) => {
-    let indexA = BOOK_SORT_ORDER.indexOf(a.name);
-    let indexB = BOOK_SORT_ORDER.indexOf(b.name);
-    if (indexA === -1) indexA = 99;
-    if (indexB === -1) indexB = 99;
-    return indexA - indexB;
-  });
-};
-
 const BookStatsSidebar: React.FC<Props> = ({ stats, activeFilters, onFilterChange }) => {
-  
-  // 计算全库总计
-  const globalStats = useMemo(() => {
-    const totals: Record<string, { read: number; unread: number }> = {};
-    let grandRead = 0;
-    let grandUnread = 0;
+  const [viewMode, setViewMode] = useState<ViewMode>('type');
+  const [expandedRegions, setExpandedRegions] = useState<Record<string, boolean>>({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    stats.forEach(region => {
-      grandRead += region.totalRead;
-      grandUnread += region.totalUnread;
-      region.details.forEach(detail => {
-        if (!totals[detail.name]) totals[detail.name] = { read: 0, unread: 0 };
-        totals[detail.name].read += detail.read;
-        totals[detail.name].unread += detail.unread;
-      });
+  // 1. 地区顺序强锁定
+  const sortedStats = useMemo(() => {
+    return [...stats].sort((a, b) => {
+      const indexA = BOOK_COUNTRIES.indexOf(a.country);
+      const indexB = BOOK_COUNTRIES.indexOf(b.country);
+      return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
     });
-
-    return { 
-      totalRead: grandRead, 
-      totalUnread: grandUnread,
-      details: sortDetails(Object.entries(totals).map(([name, val]) => ({ name, ...val }))) 
-    };
   }, [stats]);
 
+  // 2. 阅读记录汇总（体裁）
+  const typeSummary = useMemo(() => {
+    const map: Record<string, StatItem> = {};
+    stats.forEach(reg => {
+      reg.typeDetails.forEach(it => {
+        if (!map[it.name]) map[it.name] = { name: it.name, read: 0, unread: 0 };
+        map[it.name].read += it.read; map[it.name].unread += it.unread;
+      });
+    });
+    return Object.values(map).sort((a, b) => (BOOK_SORT_ORDER.indexOf(a.name) || 99) - (BOOK_SORT_ORDER.indexOf(b.name) || 99));
+  }, [stats]);
 
-  
+  const handleFilter = (update: Record<string, string | undefined>) => {
+    const newFilters = { ...activeFilters };
+    Object.keys(update).forEach(key => {
+      if (newFilters[key] === update[key]) delete newFilters[key];
+      else newFilters[key] = update[key];
+    });
+    onFilterChange(newFilters);
+  };
+
+  const renderList = (items: StatItem[], regionName?: string, isModal = false) => {
+    let sortedItems = [...items];
+    if (viewMode === 'type') {
+      sortedItems.sort((a, b) => (BOOK_SORT_ORDER.indexOf(a.name) || 99) - (BOOK_SORT_ORDER.indexOf(b.name) || 99));
+    } else if (viewMode === 'year') {
+      sortedItems.sort((a, b) => {
+        const yearA = parseInt(a.name.match(/\d+/)?.[0] || '0');
+        const yearB = parseInt(b.name.match(/\d+/)?.[0] || '0');
+        return yearA !== yearB ? yearA - yearB : a.name.localeCompare(b.name);
+      });
+    } else {
+      sortedItems.sort((a, b) => {
+        const countA = a.read + a.unread;
+        const countB = b.read + b.unread;
+        return countB !== countA ? countB - countA : a.name.localeCompare(b.name);
+      });
+    }
+
+    const limit = isModal ? 8 : 6;
+    const shouldLimit = regionName && viewMode !== 'type' && sortedItems.length > limit;
+    const isExpanded = regionName && expandedRegions[regionName];
+    const displayItems = shouldLimit && !isExpanded ? sortedItems.slice(0, limit - 1) : sortedItems;
+
+    return (
+      <div className={`mt-3 ${isModal ? 'space-y-2' : 'space-y-3.5'} pl-3`}>
+        {displayItems.map(item => {
+          const typeKey = viewMode === 'type' ? (BOOK_TYPE_MAP[item.name] || item.name) : undefined;
+          const isActive = (regionName ? activeFilters.country === regionName : !activeFilters.country) && (
+            viewMode === 'type' ? activeFilters.bookType === typeKey :
+            viewMode === 'author' ? activeFilters.author === item.name : activeFilters.year === item.name
+          );
+
+          return (
+            <div key={item.name} onClick={() => { handleFilter({ country: regionName || undefined, bookType: viewMode === 'type' ? typeKey : undefined, author: viewMode === 'author' ? item.name : undefined, year: viewMode === 'year' ? item.name : undefined }); if(isModal) setIsModalOpen(false); }} 
+              className="flex justify-between items-center group cursor-pointer">
+              <span className={`text-[11px] font-bold ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-700'}`}>{item.name}</span>
+              <div className="flex gap-3 text-[10px] font-black">
+                <span className={isActive ? "text-emerald-500" : "text-emerald-500/40"}>{item.read}</span>
+                <span className={isActive ? "text-orange-500" : "text-orange-500/40"}>{item.unread}</span>
+              </div>
+            </div>
+          );
+        })}
+        {shouldLimit && (
+          <button onClick={(e) => { e.stopPropagation(); setExpandedRegions(prev => ({...prev, [regionName!]: !prev[regionName!]})); }} className="text-[9px] font-black text-blue-600/40 hover:text-blue-600 pt-1">
+            {isExpanded ? '收起' : `更多 ${sortedItems.length - (limit - 1)} 项`}
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // 统一的选项卡布局
+  const DimensionTabs = () => (
+    <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-xl shrink-0">
+      {[
+        { id: 'type', label: '体裁', icon: Layers },
+        { id: 'author', label: '作者', icon: Users },
+        { id: 'year', label: '年代', icon: Clock }
+      ].map(m => (
+        <button key={m.id} onClick={() => setViewMode(m.id as ViewMode)} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-black transition-all ${viewMode === m.id ? 'bg-white dark:bg-white/10 shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-500'}`}>
+          <m.icon size={12} /> {m.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  // 统一的滚动列表内容
+  const ScrollArea = ({ isModal = false }) => (
+    <div className={`flex-1 overflow-y-auto pr-1 mt-6
+      [&::-webkit-scrollbar]:w-1 
+      [&::-webkit-scrollbar-track]:bg-transparent 
+      [&::-webkit-scrollbar-thumb]:bg-gray-200 dark:[&::-webkit-scrollbar-thumb]:bg-white/10 
+      [&::-webkit-scrollbar-thumb]:rounded-full
+      ${isModal ? 'pb-10' : ''}`}
+    >
+      <div className={isModal ? "space-y-5" : "space-y-6"}>
+        {viewMode === 'type' && (
+          <section className="border-b border-gray-100 dark:border-white/5 pb-6 mb-6">
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-3">
+              <PieChart size={14} className="text-blue-600" />
+              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">阅读记录预览</h3>
+            </div>
+            {renderList(typeSummary, undefined, isModal)}
+          </section>
+        )}
+        {sortedStats.map(region => (
+          <section key={region.country}>
+            <div onClick={() => { handleFilter({ country: region.country }); if(isModal) setIsModalOpen(false); }} className={`flex justify-between items-end pb-3 cursor-pointer border-b ${activeFilters.country === region.country ? 'border-blue-600' : 'border-gray-100 dark:border-white/5'}`}>
+              <div className="flex items-center gap-2">
+                <Globe size={14} className={activeFilters.country === region.country ? 'text-blue-600' : 'text-gray-400'} />
+                <span className={`text-sm font-black ${activeFilters.country === region.country ? 'text-blue-600' : 'text-gray-600 dark:text-gray-200'}`}>{region.country}</span>
+              </div>
+              <div className="flex gap-2 text-[9px] font-black"><span className="text-emerald-500">{region.totalRead}</span><span className="text-orange-500">{region.totalUnread}</span></div>
+            </div>
+            {renderList(viewMode === 'type' ? region.typeDetails : viewMode === 'author' ? region.authorDetails : region.yearDetails, region.country, isModal)}
+          </section>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="w-full space-y-4">
-      
-      {/* --- 移动端：磨砂面板 (md 以下显示) --- */}
-      <div className="md:hidden p-5 rounded-[28px] bg-white/80 dark:bg-gray-900/90 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-xl space-y-5">
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-3">
-          <div className="flex items-center gap-2">
-            <PieChart size={16} className="text-blue-600" />
-            <span className="text-[10px] font-black tracking-widest uppercase">筛选统计</span>
-          </div>
-          {(activeFilters.country || activeFilters.bookType) && (
-            <button onClick={() => onFilterChange({})} className="text-[10px] font-black text-blue-600 border-b border-blue-600/30">清除全部</button>
-          )}
-        </div>
-
-        {/* 地区选择：加入已读/未读数字展示 */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onFilterChange({})}
-            className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-2 ${
-              !activeFilters.country ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
-            }`}
-          >
-            全部 <span className="opacity-60">{globalStats.totalRead}/{globalStats.totalUnread}</span>
-          </button>
-          {stats.map(region => (
-            <button
-              key={region.country}
-              onClick={() => onFilterChange({ country: region.country })}
-              className={`px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-2 ${
-                activeFilters.country === region.country ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
-              }`}
-            >
-              {region.country} 
-              <span className={`text-[9px] ${activeFilters.country === region.country ? 'text-white/70' : 'text-gray-400'}`}>
-                {region.totalRead}/{region.totalUnread}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* 体裁选择：平铺按钮 */}
-        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-gray-100 dark:border-white/5">
-          {(!activeFilters.country ? globalStats.details : sortDetails(stats.find(s => s.country === activeFilters.country)?.details || [])).map(type => {
-            const typeKey = BOOK_TYPE_MAP[type.name] || type.name;
-            const isActive = activeFilters.bookType === typeKey;
-            return (
-              <button
-                key={type.name}
-                onClick={() => onFilterChange({ ...activeFilters, bookType: isActive ? undefined : typeKey })}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black transition-all border flex items-center gap-2 ${
-                  isActive 
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-transparent' 
-                  : 'bg-transparent text-gray-500 border-gray-200 dark:border-white/10'
-                }`}
-              >
-                {type.name}
-                <div className="flex gap-1.5">
-                  <span className="text-emerald-500">{type.read}</span>
-                  <span className="text-orange-500">{type.unread}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* --- 桌面端：始终全量展开 --- */}
-      <aside className="hidden md:block w-full sticky top-24 overflow-y-auto max-h-[85vh] no-scrollbar pr-2">
-        <div className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl rounded-[32px] p-8 border border-white/40 dark:border-white/10 shadow-2xl">
-          
-          <div className="flex items-center justify-between mb-10">
+    <>
+      {/* 1. 移动端概要视图 */}
+      <div className="md:hidden mb-8">
+        <div className="bg-white/80 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[32px] p-7 border border-white/20 shadow-xl">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 pb-4">
             <div className="flex items-center gap-2">
-              <PieChart size={18} className="text-blue-600" />
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">阅读库统计</h3>
+              <PieChart size={14} className="text-blue-600" />
+              <span className="text-[10px] font-black text-gray-400 tracking-widest">阅读记录汇总</span>
             </div>
-            {(activeFilters.country || activeFilters.bookType) && (
-              <button onClick={() => onFilterChange({})} className="text-[10px] font-black text-blue-600 hover:underline">RESET</button>
-            )}
+            <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-1 text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-xl">
+              明细统计 <BarChart3 size={12} />
+            </button>
           </div>
-
-          <div className="space-y-12">
-            {/* 1. 总计区域 */}
-            <section className="space-y-5">
-              <div 
-                onClick={() => onFilterChange({})}
-                className={`flex justify-between items-end pb-3 cursor-pointer border-b transition-all group ${
-                  (!activeFilters.country && !activeFilters.bookType) ? 'border-blue-600' : 'border-gray-200 dark:border-white/10'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Layers size={14} className="text-blue-600" />
-                  <span className={`text-sm font-black transition-colors ${(!activeFilters.country && !activeFilters.bookType) ? 'text-blue-600' : 'text-gray-800 dark:text-gray-100 group-hover:text-blue-500'}`}>全库总览</span>
-                </div>
-                <div className="flex gap-2 text-[10px] font-black">
-                  <span className="text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">已读 {globalStats.totalRead}</span>
-                  <span className="text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-md">待读 {globalStats.totalUnread}</span>
-                </div>
+          <div className="flex flex-wrap gap-3 mt-5">
+            {typeSummary.map(item => (
+              <div key={item.name} className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 px-3 py-2 rounded-xl">
+                <span className="text-[10px] font-bold text-gray-500">{item.name}</span>
+                <span className="text-[10px] font-black text-emerald-500">{item.read}</span>
               </div>
-
-              <div className="grid gap-3.5 pl-4">
-                {globalStats.details.map(type => {
-                  const typeKey = BOOK_TYPE_MAP[type.name] || type.name;
-                  const isActive = !activeFilters.country && activeFilters.bookType === typeKey;
-                  return (
-                    <div key={type.name} onClick={() => onFilterChange({ bookType: typeKey })} className="flex justify-between items-center group cursor-pointer">
-                      <span className={`text-[11px] font-bold transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}>{type.name}</span>
-                      <div className="flex gap-3 text-[10px] font-black">
-                        <span className={`transition-opacity ${isActive ? 'text-emerald-500' : 'text-emerald-500/50 group-hover:opacity-100'}`}>{type.read}</span>
-                        <span className={`transition-opacity ${isActive ? 'text-orange-500' : 'text-orange-500/50 group-hover:opacity-100'}`}>{type.unread}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* 2. 地区细分 - 全量平铺 */}
-            {stats.map(region => (
-              <section key={region.country} className="space-y-5">
-                <div 
-                  onClick={() => onFilterChange({ country: region.country })}
-                  className={`flex justify-between items-end pb-3 cursor-pointer border-b transition-all group ${
-                    activeFilters.country === region.country ? 'border-blue-600' : 'border-gray-100 dark:border-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Globe size={14} className="text-gray-400 group-hover:text-blue-500" />
-                    <span className={`text-sm font-black transition-colors ${activeFilters.country === region.country ? 'text-blue-600' : 'text-gray-600 dark:text-gray-200 group-hover:text-blue-500'}`}>{region.country}</span>
-                  </div>
-                  <div className="flex gap-2 text-[9px] font-black">
-                    <span className={activeFilters.country === region.country ? 'text-emerald-500' : 'text-emerald-500/60'}>{region.totalRead}</span>
-                    <span className="text-gray-300 dark:text-white/10">/</span>
-                    <span className={activeFilters.country === region.country ? 'text-orange-500' : 'text-orange-500/60'}>{region.totalUnread}</span>
-                  </div>
-                </div>
-                
-                <div className="grid gap-3.5 pl-4">
-                  {sortDetails(region.details).map(type => {
-                    const typeKey = BOOK_TYPE_MAP[type.name] || type.name;
-                    const isActive = activeFilters.country === region.country && activeFilters.bookType === typeKey;
-                    return (
-                      <div key={type.name} onClick={() => onFilterChange({ country: region.country, bookType: typeKey })} className="flex justify-between items-center group cursor-pointer">
-                        <span className={`text-[11px] font-bold transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}>{type.name}</span>
-                        <div className="flex gap-3 text-[10px] font-black opacity-40 group-hover:opacity-100 transition-opacity">
-                          <span className={isActive ? 'text-emerald-500 opacity-100' : 'text-emerald-500'}>{type.read}</span>
-                          <span className={isActive ? 'text-orange-500 opacity-100' : 'text-orange-500'}>{type.unread}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
             ))}
           </div>
         </div>
+
+        {/* 移动端悬浮卡片 */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+            <div className="relative w-full max-w-lg h-[80vh] bg-[#f8f9fa] dark:bg-[#0f0f0f] rounded-[32px] shadow-2xl flex flex-col overflow-hidden p-6">
+              <header className="flex items-center justify-between px-2 pb-4 shrink-0">
+                <h2 className="text-base font-black">阅读统计详情</h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 bg-gray-100 dark:bg-white/5 rounded-full"><X size={18} /></button>
+              </header>
+              <DimensionTabs />
+              <ScrollArea isModal={true} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. 桌面端展示：整个卡片吸顶，内部滚动 */}
+      <aside className="hidden md:block w-full sticky top-6 h-[90vh]">
+        <div className="bg-white/70 dark:bg-white/5 backdrop-blur-3xl rounded-[32px] p-8 border border-white/40 dark:border-white/10 shadow-2xl h-full flex flex-col overflow-hidden">
+          <DimensionTabs />
+          <ScrollArea isModal={false} />
+        </div>
       </aside>
-    </div>
+    </>
   );
 };
 

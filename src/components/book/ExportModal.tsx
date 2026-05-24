@@ -1,20 +1,7 @@
 import React, { useState } from 'react';
-import { X, Download, FileJson, FileText, Filter, Database, Check, CheckSquare, Square } from 'lucide-react';
-import { getExportData } from '@/utils/bookApi';
+import { X, Download, FileJson, FileText, Filter, Database, CheckSquare, Square } from 'lucide-react';
+import { EXPORTABLE_FIELDS, getExportData } from '@/utils/bookApi';
 import { useAuth } from '@/context/AuthContext';
-
-// 可选字段配置
-const EXPORTABLE_FIELDS = [
-  { id: 'title', label: '书名', default: true },
-  { id: 'author', label: '作者', default: true },
-  { id: 'year', label: '年代/年份', default: true },
-  { id: 'country', label: '地区', default: true },
-  { id: 'bookType', label: '体裁', default: true },
-  { id: 'status', label: '阅读状态', default: true },
-  { id: 'stories', label: '收录篇目', default: true },
-  { id: 'shortReview', label: '阅读随笔', default: true },
-  { id: 'longReview', label: '详细长评', default: false },
-];
 
 interface ExportModalProps {
   currentFilters: any;
@@ -43,7 +30,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
       const params = {
         ...(scope === 'all' ? {} : currentFilters),
         format,
-        fields: selectedFields.join(',') // 传给后端的字段串
+        fields: selectedFields.join(',')
       };
       const res = await getExportData(params, token);
 
@@ -61,7 +48,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
         onClose();
       }
     } catch (err) {
-      alert('导出任务失败');
+      alert('导出失败');
     } finally {
       setLoading(false);
     }
@@ -74,8 +61,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
       <div className="relative w-full max-w-lg bg-white dark:bg-[#0f0f0f] rounded-[32px] overflow-hidden shadow-2xl border border-white/10 animate-in zoom-in-95 flex flex-col max-h-[90vh]">
         <header className="p-8 pb-4 flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-2xl font-black italic tracking-tighter">DATA <span className="text-blue-600">EXPORT</span></h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">定制化馆藏导出</p>
+            <h2 className="text-2xl font-black italic tracking-tighter text-blue-600">数据导出</h2>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">导出你的阅读记录</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
             <X size={24} />
@@ -86,12 +73,12 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
           {/* 格式选择 */}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-              <Database size={12} /> 1. 导出格式
+              <Database size={12} /> 1. 文件格式
             </label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { id: 'text', label: '纯文本 (TXT)', icon: FileText },
-                { id: 'json', label: '结构化 (JSON)', icon: FileJson }
+                { id: 'text', label: '纯文本', icon: FileText },
+                { id: 'json', label: '结构化数据', icon: FileJson }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -107,10 +94,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             </div>
           </div>
 
-          {/* 字段选择 - 新增 */}
+          {/* 字段选择 */}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-              <CheckSquare size={12} /> 2. 选择导出字段
+              <CheckSquare size={12} /> 2. 选择导出内容
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {EXPORTABLE_FIELDS.map(field => (
@@ -137,8 +124,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             </label>
             <div className="flex gap-2">
               {[
-                { id: 'filtered', label: '当前结果' },
-                { id: 'all', label: '全部馆藏' }
+                { id: 'filtered', label: '筛选出的记录' },
+                { id: 'all', label: '全部记录' }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -163,7 +150,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <><Download size={18} /> 确认导出任务</>
+              <><Download size={18} /> 确认导出</>
             )}
           </button>
         </footer>

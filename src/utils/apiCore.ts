@@ -21,8 +21,19 @@ interface ApiClientOptions {
  * 统一的错误处理和响应解析
  */
 const handleResponse = async <T>(res: Response): Promise<T> => {
+  if (res.status === 401) {
+    // 只要后端说是 401 (未授权/过期)，立刻清空本地缓存
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // 如果你希望用户立刻跳到登录页，可以直接：
+    // window.location.href = '/login'; 
+    
+    throw new Error('登录已过期，请重新登录');
+  }
+
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: `请求失败，状态码: ${res.status}` }));
+    const errorData = await res.json().catch(() => ({ message: `请求失败: ${res.status}` }));
     throw new Error(errorData.message || '未知网络错误');
   }
   if (res.status === 204) { // No Content
