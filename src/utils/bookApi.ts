@@ -107,6 +107,13 @@ export const createBook = (bookData: Partial<Book>, token: string | null): Promi
 };
 
 /**
+ * 批量创建书籍记录
+ */
+export const createBooksBatch = (booksData: any[], token: string | null): Promise<{ success: boolean; count: number }> => {
+  return apiPost('/books', booksData, token);
+};
+
+/**
  * 更新书籍信息
  */
 export const updateBook = (id: string, bookData: Partial<Book>, token: string | null): Promise<{ success: boolean; data: Book }> => {
