@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, FileJson, FileText, Filter, Database, CheckSquare, Square } from 'lucide-react';
+import { X, Download, FileJson, FileText, Filter, Database, CheckSquare, Square, Calendar } from 'lucide-react';
 import { EXPORTABLE_FIELDS, getExportData } from '@/utils/bookApi';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,6 +15,11 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
   const [selectedFields, setSelectedFields] = useState<string[]>(
     EXPORTABLE_FIELDS.filter(f => f.default).map(f => f.id)
   );
+  
+  // 💡 新增：时间区间状态
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
   const [loading, setLoading] = useState(false);
 
   const toggleField = (id: string) => {
@@ -24,14 +29,18 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
   };
 
   const handleExecuteExport = async () => {
-    if (selectedFields.length === 0) return alert('至少选择一个导出字段');
+    if (selectedFields.length === 0) return alert('至少选择一个导出内容');
     setLoading(true);
     try {
+      // 💡 构造发送给后端的参数，包含日期区间
       const params = {
         ...(scope === 'all' ? {} : currentFilters),
         format,
-        fields: selectedFields.join(',')
+        fields: selectedFields.join(','),
+        startDate: startDate || undefined,
+        endDate: endDate || undefined
       };
+      
       const res = await getExportData(params, token);
 
       if (res.success) {
@@ -62,7 +71,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
         <header className="p-8 pb-4 flex justify-between items-center shrink-0">
           <div>
             <h2 className="text-2xl font-black italic tracking-tighter text-blue-600">数据导出</h2>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">导出你的阅读记录</p>
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1">导出你的阅读记录存档</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
             <X size={24} />
@@ -70,15 +79,15 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
         </header>
 
         <div className="p-8 pt-4 space-y-8 overflow-y-auto custom-scrollbar">
-          {/* 格式选择 */}
+          {/* 1. 格式选择 */}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
               <Database size={12} /> 1. 文件格式
             </label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { id: 'text', label: '纯文本', icon: FileText },
-                { id: 'json', label: '结构化数据', icon: FileJson }
+                { id: 'text', label: '纯文本 (TXT)', icon: FileText },
+                { id: 'json', label: '结构化数据 (JSON)', icon: FileJson }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -94,10 +103,37 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             </div>
           </div>
 
-          {/* 字段选择 */}
+          {/* 2. 时间范围选择 - 💡 这是新增的 */}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-              <CheckSquare size={12} /> 2. 选择导出内容
+              <Calendar size={12} /> 2. 选择存档时间范围 (可选)
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-gray-400 ml-1">开始日期</span>
+                <input 
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 ring-blue-500/20"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] font-bold text-gray-400 ml-1">结束日期</span>
+                <input 
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 ring-blue-500/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. 字段选择 */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+              <CheckSquare size={12} /> 3. 选择导出内容
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {EXPORTABLE_FIELDS.map(field => (
@@ -117,21 +153,21 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             </div>
           </div>
 
-          {/* 范围选择 */}
+          {/* 4. 范围选择 */}
           <div className="space-y-3">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-              <Filter size={12} /> 3. 导出范围
+              <Filter size={12} /> 4. 导出记录范围
             </label>
             <div className="flex gap-2">
               {[
-                { id: 'filtered', label: '筛选出的记录' },
+                { id: 'filtered', label: '按当前筛选' },
                 { id: 'all', label: '全部记录' }
               ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setScope(item.id as any)}
                   className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    scope === item.id ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
+                    scope === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
                   }`}
                 >
                   {item.label}
