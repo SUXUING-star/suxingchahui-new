@@ -1,6 +1,7 @@
 // src/utils/apiCore.ts
 
 import API_BASE_URL from './apiConfig';
+import pako from 'pako';
 
 // --- 内部请求管理变量 (仅用于 GET 缓存) ---
 const pendingRequests = new Map<string, Promise<any>>();
@@ -18,17 +19,12 @@ interface ApiClientOptions {
 }
 
 /**
- * 统一的错误处理和响应解析
+ * 统一的错误处理和响应解析 (增加解压逻辑)
  */
 const handleResponse = async <T>(res: Response): Promise<T> => {
   if (res.status === 401) {
-    // 只要后端说是 401 (未授权/过期)，立刻清空本地缓存
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
-    // 如果你希望用户立刻跳到登录页，可以直接：
-    // window.location.href = '/login'; 
-    
     throw new Error('登录已过期，请重新登录');
   }
 
@@ -36,9 +32,19 @@ const handleResponse = async <T>(res: Response): Promise<T> => {
     const errorData = await res.json().catch(() => ({ message: `请求失败: ${res.status}` }));
     throw new Error(errorData.message || '未知网络错误');
   }
-  if (res.status === 204) { // No Content
-    return {} as T;
+
+  if (res.status === 204) return {} as T;
+
+  // ✨ 核心魔法：检测是否被压缩
+  const isCompressed = res.headers.get('X-Response-Compressed') === 'true' || 
+                       res.headers.get('Content-Encoding') === 'gzip';
+
+  if (isCompressed) {
+    const arrayBuffer = await res.arrayBuffer();
+    const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: 'string' });
+    return JSON.parse(decompressed);
   }
+
   return res.json();
 };
 
