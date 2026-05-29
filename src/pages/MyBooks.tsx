@@ -21,15 +21,15 @@ const MyBooks: React.FC = () => {
   // --- 状态管理 ---
   const [books, setBooks] = useState<Book[]>([]);
   const [stats, setStats] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true); 
-  const [fetchingNextPage, setFetchingNextPage] = useState(false); 
+  const [loading, setLoading] = useState(true);
+  const [fetchingNextPage, setFetchingNextPage] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [hasMore, setHasMore] = useState(false); // 是否还有更多
 
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<{ 
-    country?: string; 
-    bookType?: string; 
+  const [filters, setFilters] = useState<{
+    country?: string;
+    bookType?: string;
     search?: string;
     author?: string;
     year?: string;
@@ -50,7 +50,7 @@ const MyBooks: React.FC = () => {
    */
   const fetchData = useCallback(async (targetPage: number, append = false) => {
     if (!token) return;
-    
+
     if (append) setFetchingNextPage(true);
     else setLoading(true);
 
@@ -69,7 +69,7 @@ const MyBooks: React.FC = () => {
       } else {
         setBooks(newBooks);
       }
-      
+
       setPagination({ page, pages, total });
       setHasMore(page < pages);
       pageRef.current = page;
@@ -115,7 +115,9 @@ const MyBooks: React.FC = () => {
 
   // 筛选后滚动回顶
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 如果你只想让窗口回顶，可以保留。
+    // 但为了不让侧边栏操作显得突兀，建议只在非移动端或者特定条件下触发
+    window.scrollTo({ top: 0, behavior: 'instant' }); // 使用 instant 会比 smooth 减少那种“乱跳”的感觉
   }, [filters]);
 
   const execDelete = async () => {
@@ -140,7 +142,7 @@ const MyBooks: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-6 text-gray-900 dark:text-white min-h-screen pb-32">
-      
+
       {/* 顶部布局：增加返回按钮 */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-10">
         <div className="flex items-center gap-3 px-4 py-3 rounded-[24px] bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-sm shrink-0">
@@ -160,7 +162,7 @@ const MyBooks: React.FC = () => {
           {!isSelectMode && (
             <div className="relative group">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-              <input 
+              <input
                 type="text" placeholder="快速检索..." value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && setFilters(prev => ({ ...prev, search }))}
@@ -194,7 +196,7 @@ const MyBooks: React.FC = () => {
           {Object.values(filters).some(v => v) && (
             <div className="mb-6 flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-3 py-1.5 rounded-lg text-[10px] font-bold w-fit">
               <span>正在筛选: {filters.country || '全部'} {filters.bookType && `· ${filters.bookType}`}</span>
-              <button onClick={() => {setFilters({}); setSearch('');}}><X size={12} /></button>
+              <button onClick={() => { setFilters({}); setSearch(''); }}><X size={12} /></button>
             </div>
           )}
 
@@ -219,7 +221,7 @@ const MyBooks: React.FC = () => {
               <div ref={observerTarget} className="w-full h-32 flex items-center justify-center mt-12">
                 {fetchingNextPage ? (
                   <div className="flex items-center gap-2 text-gray-400 text-xs font-bold animate-pulse">
-                    <LoadingSpinner /> 
+                    <LoadingSpinner />
                   </div>
                 ) : (
                   !hasMore && books.length > 0 && (
