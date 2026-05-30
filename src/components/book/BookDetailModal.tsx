@@ -3,7 +3,8 @@ import anime from 'animejs';
 import {
   X, BookOpen, User, Globe, Tag,
   MessageSquare, Edit3, Save,
-  RotateCcw, Plus, Trash2, List, Clock, History, CheckCircle2, Circle
+  RotateCcw, Plus, Trash2, List, Clock, History, CheckCircle2, Circle,
+  MapPin
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Book, updateBook, INITIAL_BOOK_FORM, BOOK_COUNTRIES, BOOK_TYPES } from '@/utils/bookApi';
@@ -123,7 +124,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
             <div className="flex flex-wrap gap-x-6 gap-y-3 text-[10px] font-black text-gray-500 uppercase tracking-widest">
               {/* 作者 */}
               <span className="flex items-center gap-1.5">
-                <User size={14} className="text-blue-500" /> 
+                <User size={14} className="text-blue-500" />
                 {isEditing ? <input className="bg-transparent border-b border-gray-600 outline-none" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} /> : formData.author}
               </span>
 
@@ -149,7 +150,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
               {/* 地区 */}
               <span className="flex items-center gap-1.5">
-                <Globe size={14} className="text-emerald-500" /> 
+                <Globe size={14} className="text-emerald-500" />
                 {isEditing ? (
                   <select className="bg-transparent border-b border-gray-600 outline-none" value={formData.country} onChange={e => setFormData({ ...formData, country: e.target.value })}>
                     {BOOK_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -157,12 +158,27 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                 ) : formData.country}
               </span>
 
+              {/* 新增：具体国家 */}
+              <span className="flex items-center gap-1.5">
+                <MapPin size={14} className="text-orange-500" />
+                {isEditing ? (
+                  <input
+                    placeholder="具体国家 (可选)"
+                    className="bg-transparent border-b border-gray-600 outline-none w-20"
+                    value={formData.specificCountry}
+                    onChange={e => setFormData({ ...formData, specificCountry: e.target.value })}
+                  />
+                ) : (
+                  formData.specificCountry || formData.country // 如果没填，就显示大类名称
+                )}
+              </span>
+
               {/* 年代 */}
               <span className="flex items-center gap-1.5">
-                <History size={14} className="text-purple-500" /> 
+                <History size={14} className="text-purple-500" />
                 {isEditing ? <input className="bg-transparent border-b border-gray-600 w-16 outline-none" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} /> : (formData.year || '未知年代')}
               </span>
-              
+
               <span className="flex items-center gap-1.5"><Clock size={14} /> {new Date(book.createdAt).toLocaleDateString()} 记录</span>
             </div>
           </div>

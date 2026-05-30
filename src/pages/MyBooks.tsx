@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Library, Settings2, X, Download, Search, ArrowLeft } from 'lucide-react';
+import { Plus, Library, Settings2, X, Download, Search, ArrowLeft, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useLayout } from '@/context/LayoutContext';
@@ -11,6 +11,7 @@ import BookDetailModal from '@/components/book/BookDetailModal';
 import BookStatsSidebar from '@/components/book/BookStatsSidebar';
 import CreateBookModal from '@/components/book/CreateBookModal';
 import ExportModal from '@/components/book/ExportModal';
+import BatchEditModal from '@/components/book/BatchEditModal';
 import StatusPlaceholder from '@/components/common/StatusPlaceholder';
 
 const MyBooks: React.FC = () => {
@@ -40,6 +41,7 @@ const MyBooks: React.FC = () => {
   const [detailBook, setDetailBook] = useState<Book | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isBatchEditModalOpen, setIsBatchEditModalOpen] = useState(false); // 💡 2. 增加状态
 
   // 💡 用来存当前页码，防止闭包拿不到最新的
   const pageRef = useRef(1);
@@ -178,9 +180,26 @@ const MyBooks: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button onClick={() => setIsSelectMode(true)} className="flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] border border-gray-100 dark:border-transparent"><Settings2 size={14} /> 批量</button>
-              <button onClick={() => setIsExportModalOpen(true)} className="flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] border border-gray-100 dark:border-transparent"><Download size={14} /> 导出</button>
-              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-xl font-bold text-[11px] hover:bg-blue-700 shadow-md transition-all active:scale-95"><Plus size={16} /> 记录</button>
+              <button onClick={() => setIsSelectMode(true)} className="flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] border border-gray-100 dark:border-transparent transition-all hover:bg-gray-100">
+                <Settings2 size={14} /> 批量
+              </button>
+
+              <button onClick={() => setIsExportModalOpen(true)} className="flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl font-bold text-[11px] border border-gray-100 dark:border-transparent transition-all hover:bg-gray-100">
+                <Download size={14} /> 导出
+              </button>
+
+              {/* 💡 3. 新增：批量同步按钮 */}
+              <button
+                onClick={() => setIsBatchEditModalOpen(true)}
+                className="flex items-center gap-2 bg-orange-500/10 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-xl font-bold text-[11px] border border-orange-200 dark:border-orange-500/20 transition-all hover:bg-orange-500 hover:text-white"
+                title="贴入 JSON 批量同步修改"
+              >
+                <RefreshCcw size={14} /> 批量修改
+              </button>
+
+              <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-xl font-bold text-[11px] hover:bg-blue-700 shadow-md transition-all active:scale-95">
+                <Plus size={16} /> 记录
+              </button>
             </div>
           )}
         </div>
@@ -237,6 +256,7 @@ const MyBooks: React.FC = () => {
       {isCreateModalOpen && <CreateBookModal onClose={() => setIsCreateModalOpen(false)} onSuccess={() => fetchData(1, false)} />}
       {isExportModalOpen && <ExportModal currentFilters={filters} onClose={() => setIsExportModalOpen(false)} />}
       {detailBook && <BookDetailModal book={detailBook} onClose={() => setDetailBook(null)} onRefresh={() => fetchData(1, false)} />}
+      {isBatchEditModalOpen && <BatchEditModal onClose={() => setIsBatchEditModalOpen(false)} onSuccess={() => fetchData(1, false)} existingBooks={books} />}
     </div>
   );
 };

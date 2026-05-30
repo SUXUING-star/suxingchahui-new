@@ -57,8 +57,8 @@ const BookCard: React.FC<BookCardProps> = ({ book, isSelected, isSelectMode, onT
 
             {/* 2. 书脊渐变条：模拟圆润书脊的明暗效果 */}
             <div className={`absolute top-0 left-0 bottom-0 w-[4px] md:w-[6px] rounded-l-sm ${isRead
-                    ? 'bg-gradient-to-b from-emerald-400 via-emerald-250 to-emerald-300'
-                    : 'bg-gradient-to-b from-orange-400 via-orange-250 to-orange-300'
+                ? 'bg-gradient-to-b from-emerald-400 via-emerald-250 to-emerald-300'
+                : 'bg-gradient-to-b from-orange-400 via-orange-250 to-orange-300'
                 } opacity-80`} />
 
             {/* 装订压痕 */}
@@ -107,7 +107,10 @@ const BookCard: React.FC<BookCardProps> = ({ book, isSelected, isSelectMode, onT
 
             {/* 简评 - 关键修复：增加 overflow-hidden 和 break-words 确保 line-clamp 生效 */}
             {book.shortReview && (
-                <p className="hidden md:block text-[10px] leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 font-medium opacity-90 border-l-2 border-gray-200 dark:border-white/10 pl-2 overflow-hidden text-ellipsis break-words">
+                <p className="text-[10px] md:text-[11px] leading-relaxed text-gray-500 dark:text-gray-400 
+        line-clamp-2 mb-4 font-medium opacity-90 
+        border-l-2 border-gray-200 dark:border-white/10 pl-2 
+        overflow-hidden text-ellipsis break-words">
                     {book.shortReview}
                 </p>
             )}
@@ -115,8 +118,8 @@ const BookCard: React.FC<BookCardProps> = ({ book, isSelected, isSelectMode, onT
             {/* 底部栏 */}
             <div className={`pt-1.5 md:pt-3 border-t flex items-center justify-between ${isRead ? 'border-emerald-100 dark:border-emerald-900/20' : 'border-orange-100 dark:border-orange-900/20'}`}>
                 <span className={`flex items-center gap-1 text-[7px] md:text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${isRead
-                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50'
-                        : 'bg-orange-500/10 text-orange-600 border-orange-200/50'
+                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50'
+                    : 'bg-orange-500/10 text-orange-600 border-orange-200/50'
                     }`}>
                     {isRead ? '已阅' : '待读'}
                 </span>

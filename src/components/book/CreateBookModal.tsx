@@ -12,7 +12,7 @@ import {
 
 interface CreateBookModalProps {
   onClose: () => void;
-  onSuccess: () => void; 
+  onSuccess: () => void;
 }
 
 const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess }) => {
@@ -42,11 +42,9 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
 
   // --- 核心修复：支持逗号断开每条记录 ---
   const handleParse = () => {
-    // 1. 先用逗号（中英文）或换行符把每条记录切开
     const records = rawText.split(/[,，\n]+/).map(r => r.trim()).filter(r => r);
 
     const parsed = records.map(record => {
-      // 2. 内部用横杠、分号或空格切分字段
       const parts = record.split(/[-——;；/\s]+/).map(p => p.trim());
       const rawType = parts[4] || 'novel';
       const matchedType = Object.entries(BOOK_TYPE_MAP).find(([label]) => rawType.includes(label))?.[1] || 'novel';
@@ -56,6 +54,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
         author: parts[1] || '未知',
         year: parts[2] || '',
         country: parts[3] || '中国',
+        specificCountry: parts[5] || '', // 解析第6个字段作为具体国家
         bookType: matchedType,
         status: 'unread',
         stories: [],
@@ -258,6 +257,17 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* 新增：具体国家输入 */}
+              <div className="space-y-2">s
+                <label className="text-[10px] font-black uppercase text-gray-500 px-1">具体国家 (可选)</label>
+                <input
+                  className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 ring-blue-500/30 outline-none transition-all"
+                  placeholder="如：英国、法国、奥地利... (不填则默认为所属地区)"
+                  value={formData.specificCountry}
+                  onChange={e => setFormData({ ...formData, specificCountry: e.target.value })}
+                />
               </div>
 
               <div className="space-y-2 pb-4">

@@ -8,6 +8,7 @@ export interface Book {
   author: string;
   year: string;        // <--- 刚加的年代字段
   country: string;
+  specificCountry?: string; // 具体国家
   bookType: string;
   status: 'read' | 'unread';
   stories: string[];
@@ -39,6 +40,7 @@ export const EXPORTABLE_FIELDS = [
   { id: 'author', label: '作者', default: true },
   { id: 'year', label: '年代/年份', default: true },
   { id: 'country', label: '地区', default: true },
+  { id: 'specificCountry', label: '具体国家', default: true }, 
   { id: 'bookType', label: '体裁', default: true },
   { id: 'status', label: '阅读状态', default: true },
   { id: 'stories', label: '收录篇目', default: true },
@@ -53,6 +55,7 @@ export interface BookRequest {
   author: string;
   year: string;
   country: string;
+  specificCountry?: string; 
   bookType: string;
   status: 'read' | 'unread';
   stories: string[];
@@ -66,6 +69,7 @@ export const INITIAL_BOOK_FORM: BookRequest = {
   author: '',
   year: '',
   country: '中国',
+  specificCountry: '', // 初始为空
   bookType: 'novel',
   status: 'read',
   stories: [],
@@ -119,6 +123,21 @@ export const createBooksBatch = (booksData: any[], token: string | null): Promis
 export const updateBook = (id: string, bookData: Partial<Book>, token: string | null): Promise<{ success: boolean; data: Book }> => {
   return apiPut(`/books/${id}`, bookData, token);
 };
+
+/**
+ * 1. 批量对比接口：发给后端，让后端去库里找茬，返回差异
+ */
+export const compareBooksBatch = (booksData: any, token: string | null): Promise<{ success: boolean; diffs: any[] }> => {
+  return apiPost('/books/compare', booksData, token);
+};
+
+/**
+ * 2. 批量更新接口：只发送变化的字段进行增量更新
+ */
+export const updateBooksBatch = (booksData: any[], token: string | null): Promise<{ success: boolean; modifiedCount: number }> => {
+  return apiPut('/books', booksData, token);
+};
+
 
 /**
  * 批量删除书籍

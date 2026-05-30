@@ -15,15 +15,15 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
   const [selectedFields, setSelectedFields] = useState<string[]>(
     EXPORTABLE_FIELDS.filter(f => f.default).map(f => f.id)
   );
-  
+
   // 💡 新增：时间区间状态
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
 
   const toggleField = (id: string) => {
-    setSelectedFields(prev => 
+    setSelectedFields(prev =>
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
@@ -32,15 +32,16 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
     if (selectedFields.length === 0) return alert('至少选择一个导出内容');
     setLoading(true);
     try {
-      // 💡 构造发送给后端的参数，包含日期区间
-      const params = {
+      // 💡 构造参数时，只有有值才塞进去
+      const params: any = {
         ...(scope === 'all' ? {} : currentFilters),
         format,
         fields: selectedFields.join(','),
-        startDate: startDate || undefined,
-        endDate: endDate || undefined
       };
-      
+
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
       const res = await getExportData(params, token);
 
       if (res.success) {
@@ -66,7 +67,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-lg bg-white dark:bg-[#0f0f0f] rounded-[32px] overflow-hidden shadow-2xl border border-white/10 animate-in zoom-in-95 flex flex-col max-h-[90vh]">
         <header className="p-8 pb-4 flex justify-between items-center shrink-0">
           <div>
@@ -92,9 +93,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
                 <button
                   key={item.id}
                   onClick={() => setFormat(item.id as any)}
-                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${
-                    format === item.id ? 'border-blue-600 bg-blue-600/5' : 'border-transparent bg-gray-100 dark:bg-white/5'
-                  }`}
+                  className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all ${format === item.id ? 'border-blue-600 bg-blue-600/5' : 'border-transparent bg-gray-100 dark:bg-white/5'
+                    }`}
                 >
                   <item.icon size={20} className={format === item.id ? 'text-blue-600' : 'text-gray-500'} />
                   <span className={`font-black text-xs ${format === item.id ? 'text-blue-600' : ''}`}>{item.label}</span>
@@ -111,7 +111,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-gray-400 ml-1">开始日期</span>
-                <input 
+                <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
@@ -120,7 +120,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
               </div>
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-gray-400 ml-1">结束日期</span>
-                <input 
+                <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
@@ -140,11 +140,10 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
                 <button
                   key={field.id}
                   onClick={() => toggleField(field.id)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-left ${
-                    selectedFields.includes(field.id)
-                    ? 'border-blue-500/50 bg-blue-500/10 text-blue-600'
-                    : 'border-transparent bg-gray-100 dark:bg-white/5 text-gray-500'
-                  }`}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all text-left ${selectedFields.includes(field.id)
+                      ? 'border-blue-500/50 bg-blue-500/10 text-blue-600'
+                      : 'border-transparent bg-gray-100 dark:bg-white/5 text-gray-500'
+                    }`}
                 >
                   {selectedFields.includes(field.id) ? <CheckSquare size={14} /> : <Square size={14} />}
                   <span className="text-[11px] font-bold">{field.label}</span>
@@ -166,9 +165,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ currentFilters, onClose }) =>
                 <button
                   key={item.id}
                   onClick={() => setScope(item.id as any)}
-                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    scope === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
-                  }`}
+                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${scope === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-gray-100 dark:bg-white/5 text-gray-500'
+                    }`}
                 >
                   {item.label}
                 </button>
