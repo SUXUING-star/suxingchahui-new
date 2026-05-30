@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import anime from 'animejs';
 import {
   X, Save, Type, Globe2, History, MessageSquare,
-  PlusCircle, Circle, CheckCircle2, ListPlus, Trash2, Copy, Check
+  PlusCircle, Circle, CheckCircle2, ListPlus, Trash2, Copy, Check, MapPin
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -28,8 +29,8 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
   const modalRef = useRef(null);
   const backdropRef = useRef(null);
 
-  // 💡 示例内容：展示用逗号断开多条记录
-  const EXAMPLE_TEXT = "百年孤独 - 马尔克斯 - 1967 - 美洲 - 中长篇, 围城 - 钱锺书 - 1947 - 中国 - 中长篇, 罗生门 - 芥川龙之介 - 1915 - 日本 - 短篇集";
+  // 💡 样例更新：增加了第六位“具体国家”
+  const EXAMPLE_TEXT = "百年孤独 - 马尔克斯 - 1967 - 美洲 - 中长篇 - 哥伦比亚, 围城 - 钱锺书 - 1947 - 中国 - 中长篇 - 中国";
 
   useEffect(() => {
     anime({ targets: backdropRef.current, opacity: [0, 1], duration: 300, easing: 'linear' });
@@ -40,7 +41,6 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
     anime({ targets: [modalRef.current, backdropRef.current], opacity: 0, scale: 0.9, duration: 200, easing: 'easeInQuad', complete: onClose });
   };
 
-  // --- 核心修复：支持逗号断开每条记录 ---
   const handleParse = () => {
     const records = rawText.split(/[,，\n]+/).map(r => r.trim()).filter(r => r);
 
@@ -54,7 +54,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
         author: parts[1] || '未知',
         year: parts[2] || '',
         country: parts[3] || '中国',
-        specificCountry: parts[5] || '', // 解析第6个字段作为具体国家
+        specificCountry: parts[5] || '', // 💡 识别第六个字段
         bookType: matchedType,
         status: 'unread',
         stories: [],
@@ -81,30 +81,16 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
     setLoading(true);
     try {
       if (isBatchMode) {
-        // 批量模式
-        if (batchPreview.length === 0) {
-          alert('请先识别内容');
-          setLoading(false);
-          return;
-        }
-        // 调用统一的批量工具函数
+        if (batchPreview.length === 0) { alert('请先识别内容'); setLoading(false); return; }
         await createBooksBatch(batchPreview, token);
       } else {
-        // 单条模式
-        if (!formData.title || !formData.author) {
-          alert('书名和作者是必填项');
-          setLoading(false);
-          return;
-        }
-        // 调用统一的单条工具函数
+        if (!formData.title || !formData.author) { alert('书名和作者是必填项'); setLoading(false); return; }
         await createBook(formData, token);
       }
-
-      // 成功后的处理
       onSuccess();
       handleClose();
     } catch (err) {
-      alert('保存记录失败，请检查网络或格式');
+      alert('保存记录失败');
     } finally {
       setLoading(false);
     }
@@ -137,7 +123,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
             <div className="space-y-6">
               <div className="space-y-3">
                 <div className="flex justify-between items-end px-1">
-                  <label className="text-[10px] font-black text-gray-500 uppercase">贴入记录 (每条记录用逗号隔开)</label>
+                  <label className="text-[10px] font-black text-gray-500 uppercase">贴入记录 (书名-作者-年份-地区-体裁-国家)</label>
                   <button type="button" onClick={copyExample} className="text-[9px] font-black text-blue-600 flex items-center gap-1 hover:underline">
                     {copied ? <><Check size={10} /> 已复制</> : <><Copy size={10} /> 复制示例格式</>}
                   </button>
@@ -154,7 +140,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
 
                 <textarea
                   className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-2xl px-4 py-4 text-sm font-medium min-h-[140px] focus:ring-2 ring-blue-500/20 outline-none resize-none"
-                  placeholder="在此贴入一连串记录，用逗号或换行分隔..."
+                  placeholder="书名 - 作者 - 年代 - 地区 - 体裁 - 具体国家..."
                   value={rawText}
                   onChange={e => setRawText(e.target.value)}
                 />
@@ -172,8 +158,9 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                           <input className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 py-1 text-xs font-bold outline-none focus:border-blue-500" value={item.title} onChange={e => handleBatchUpdate(idx, 'title', e.target.value)} placeholder="书名" />
                           <input className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 py-1 text-xs font-bold outline-none focus:border-blue-500" value={item.author} onChange={e => handleBatchUpdate(idx, 'author', e.target.value)} placeholder="作者" />
                         </div>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                           <input className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 py-1 text-[10px] font-bold outline-none focus:border-blue-500" value={item.year} onChange={e => handleBatchUpdate(idx, 'year', e.target.value)} placeholder="年代" />
+                          <input className="w-full bg-transparent border-b border-gray-200 dark:border-white/10 py-1 text-[10px] font-bold outline-none focus:border-blue-500" value={item.specificCountry} onChange={e => handleBatchUpdate(idx, 'specificCountry', e.target.value)} placeholder="具体国家" />
                           <select className="bg-transparent border-b border-gray-200 dark:border-white/10 text-[10px] font-bold outline-none cursor-pointer" value={item.country} onChange={e => handleBatchUpdate(idx, 'country', e.target.value)}>
                             {BOOK_COUNTRIES.map(c => <option key={c} value={c.trim()}>{c.trim()}</option>)}
                           </select>
@@ -188,7 +175,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
               )}
             </div>
           ) : (
-            /* --- 单条录入：字段全部保留，样式还原 --- */
+            /* --- 单条录入 --- */
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -201,9 +188,15 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 px-1"><History size={12} className="text-blue-600" /> 年代 / 年份</label>
-                <input className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 ring-blue-500/30 transition-all" placeholder="例如：1967" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 px-1"><History size={12} className="text-blue-600" /> 年代 / 年份</label>
+                  <input className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 ring-blue-500/30 transition-all" placeholder="例如：1967" value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 px-1"><MapPin size={12} className="text-blue-600" /> 具体国家</label>
+                  <input className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:ring-2 ring-blue-500/30 transition-all" placeholder="如：法国" value={formData.specificCountry} onChange={e => setFormData({ ...formData, specificCountry: e.target.value })} />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -229,27 +222,8 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                 </div>
               </div>
 
-              {formData.bookType === 'collection' && (
-                <div className="space-y-3 p-4 bg-blue-50/50 dark:bg-blue-600/5 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black uppercase text-blue-600">收录篇目 ({formData.stories.length})</label>
-                    <button type="button" onClick={() => setFormData(p => ({ ...p, stories: [...p.stories, ''] }))} className="text-[10px] font-black text-blue-600 flex items-center gap-1 hover:underline">
-                      <PlusCircle size={12} /> 添加
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {formData.stories.map((story, index) => (
-                      <div key={index} className="flex gap-2">
-                        <input className="flex-1 bg-white dark:bg-black/20 border border-gray-200 dark:border-white/5 rounded-lg px-3 py-1.5 text-xs font-bold outline-none focus:border-blue-500" placeholder={`篇目名称 ${index + 1}`} value={story} onChange={e => { const s = [...formData.stories]; s[index] = e.target.value; setFormData({ ...formData, stories: s }); }} />
-                        <button type="button" onClick={() => setFormData(p => ({ ...p, stories: p.stories.filter((_, i) => i !== index) }))} className="text-red-400 hover:text-red-600 px-1">×</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-gray-500 px-1">作者所属地区</label>
+                <label className="text-[10px] font-black uppercase text-gray-500 px-1">作者所属地区 (大类)</label>
                 <div className="flex flex-wrap gap-2">
                   {BOOK_COUNTRIES.map(c => (
                     <button key={c} type="button" onClick={() => setFormData({ ...formData, country: c.trim() })} className={`px-4 py-1.5 rounded-lg font-bold text-[10px] transition-all border ${formData.country === c.trim() ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-500 hover:border-blue-300'}`}>
@@ -259,17 +233,6 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
                 </div>
               </div>
 
-              {/* 新增：具体国家输入 */}
-              <div className="space-y-2">s
-                <label className="text-[10px] font-black uppercase text-gray-500 px-1">具体国家 (可选)</label>
-                <input
-                  className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-2 ring-blue-500/30 outline-none transition-all"
-                  placeholder="如：英国、法国、奥地利... (不填则默认为所属地区)"
-                  value={formData.specificCountry}
-                  onChange={e => setFormData({ ...formData, specificCountry: e.target.value })}
-                />
-              </div>
-
               <div className="space-y-2 pb-4">
                 <label className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 px-1"><MessageSquare size={12} className="text-blue-600" /> 阅读随笔</label>
                 <textarea className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 font-medium text-sm min-h-[80px] focus:ring-2 ring-blue-500/30 transition-all resize-none outline-none" placeholder="记录一些心得..." value={formData.shortReview} onChange={e => setFormData({ ...formData, shortReview: e.target.value })} />
@@ -277,7 +240,6 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({ onClose, onSuccess })
             </div>
           )}
         </div>
-
 
         <footer className="p-6 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/2 rounded-b-[32px] flex gap-3 shrink-0">
           <button type="button" onClick={handleClose} className="flex-1 px-4 py-3.5 rounded-xl font-bold text-xs text-gray-500 hover:bg-gray-100">取消</button>
