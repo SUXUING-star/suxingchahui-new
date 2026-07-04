@@ -32,3 +32,7 @@ dist-ssr
 .vercel
 
 posts/
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
