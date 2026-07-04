@@ -1,45 +1,41 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ImageIcon, Loader2, RefreshCw } from "lucide-react";
 
-/**
- * 格式化 R2 资源的公网 URL
- */
-export const normalizeR2Url = (url: string): string => {
-  if (!url) return "";
-  const publicUrl = (import.meta.env.VITE_R2_PUBLIC_URL || "").replace(
-    /\/$/,
-    "",
-  );
+// 获取 Vite 的 R2 公共链接环境变量
+const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL || "";
 
-  // 1. 如果是相对路径
-  if (url.startsWith("custom_app/") || url.startsWith("assets/")) {
-    return `${publicUrl}/${url}`;
-  }
+// 格式化图片链接，强制替换或补充为最新的 R2_PUBLIC_URL 前缀
+const formatImgUrl = (src: string): string => {
+  if (!src) return "";
+  let path = src;
 
-  // 2. 如果是绝对路径且包含 R2 特征
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    const customAppIdx = url.indexOf("/custom_app/");
-    if (customAppIdx !== -1) {
-      return `${publicUrl}/${url.slice(customAppIdx + 1)}`;
-    }
-    const assetsIdx = url.indexOf("/assets/");
-    if (assetsIdx !== -1) {
-      return `${publicUrl}/${url.slice(assetsIdx + 1)}`;
+  // 如果原本就是完整的 http/https 链接，提取其相对路径部分（包含参数及 hash）
+  if (/^https?:\/\//i.test(src)) {
+    try {
+      const parsed = new URL(src);
+      path = parsed.pathname + parsed.search + parsed.hash;
+    } catch {
+      // 解析出错时降级保留原字符
     }
   }
 
-  return url;
+  // 清理斜杠并完成拼接
+  const baseUrl = R2_PUBLIC_URL.replace(/\/+$/, "");
+  const cleanPath = path.replace(/^\/+/, "");
+
+  return `${baseUrl}/${cleanPath}`;
 };
 
-// 继承原生图片的所有合法属性
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+// 图片缓存，防止同一张图在不同组件重复触发动画
+const imageCache = new Set<string>();
+
+interface LazyImageProps {
   src: string;
   alt: string;
   className?: string;
   wrapperClassName?: string;
   objectFit?: "object-cover" | "object-contain" | "object-fill";
-  fullHeight?: boolean; // 👈 补回缺少的类型属性
-  simple?: boolean; // 极简模式（微缩图/头像场景，去除所有文字溢出可能）
+  fullHeight?: boolean;
 }
 
 const LazyImage: React.FC<LazyImageProps> = ({
@@ -48,106 +44,100 @@ const LazyImage: React.FC<LazyImageProps> = ({
   className = "",
   wrapperClassName = "",
   objectFit = "object-cover",
-  fullHeight = true, // 👈 补回缺少的默认值
-  simple = false,
-  ...props
+  fullHeight = true,
 }) => {
-  const normalizedSrc = normalizeR2Url(src);
+  // 在这里将传入的 src 强制格式化为最新的 R2 链接
+  const formattedSrc = formatImgUrl(src);
 
-  // 单一状态机
-  const [status, setStatus] = useState<"loading" | "loaded" | "error">(
-    "loading",
+  const [isLoaded, setIsLoaded] = useState<boolean>(
+    imageCache.has(formattedSrc),
   );
-  const [retryKey, setRetryKey] = useState<number>(0);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // 每次地址发生变化，初始化状态
-  useEffect(() => {
-    if (!normalizedSrc) {
-      setStatus("error");
-      return;
-    }
-    setStatus("loading");
-  }, [normalizedSrc]);
+  const optimizedSrc =
+    retryCount > 0
+      ? `${formattedSrc}${formattedSrc.includes("?") ? "&" : "?"}retry=${retryCount}`
+      : formattedSrc;
 
   const handleLoad = () => {
-    setStatus("loaded");
+    if (formattedSrc) imageCache.add(formattedSrc);
+    setIsLoaded(true);
+    setHasError(false);
   };
 
   const handleError = () => {
-    setStatus("error");
+    setHasError(true);
+    setIsLoaded(false);
   };
 
   const handleRetry = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setStatus("loading");
-    setRetryKey((prev) => prev + 1);
+    setHasError(false);
+    setIsLoaded(false);
+    setRetryCount((prev) => prev + 1);
   };
 
-  // 生成最终带有击穿缓存参数的地址
-  const finalSrc =
-    retryKey > 0
-      ? `${normalizedSrc}${normalizedSrc.includes("?") ? "&" : "?"}retry=${retryKey}`
-      : normalizedSrc;
+  useEffect(() => {
+    if (imageCache.has(formattedSrc)) {
+      setIsLoaded(true);
+      setHasError(false);
+      return;
+    }
+    setIsLoaded(false);
+    setHasError(false);
+  }, [formattedSrc]);
 
   return (
     <div
-      className={`relative overflow-hidden bg-gray-50 dark:bg-gray-800/40 select-none ${wrapperClassName} ${fullHeight ? "h-full" : ""}`}
+      className={`relative overflow-hidden bg-gray-50 dark:bg-gray-800/50 ${wrapperClassName} ${fullHeight ? "h-full" : ""}`}
     >
-      {/* 1. 载入状态骨架屏 (状态为 loading 时展示) */}
-      {status === "loading" && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-100/90 dark:bg-gray-800/90">
-          <Loader2
-            className={`${simple ? "w-4 h-4" : "w-6 h-6"} text-blue-500 animate-spin opacity-75`}
-          />
-          {!simple && (
-            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1.5">
-              Loading...
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+          <div className="flex flex-col items-center space-y-2">
+            <Loader2 className="w-8 h-8 text-blue-500 animate-spin opacity-50" />
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              载入中...
             </span>
-          )}
+          </div>
         </div>
       )}
 
-      {/* 2. 异常重试面板 (状态为 error 时覆盖其上) */}
-      {status === "error" && (
+      {hasError ? (
         <button
-          type="button"
           onClick={handleRetry}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-gray-50/95 dark:bg-gray-800/95 hover:bg-gray-100 dark:hover:bg-gray-700/80 text-gray-400 hover:text-blue-500 transition-colors group"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center text-gray-400 hover:text-blue-500 bg-gray-50 dark:bg-gray-800 transition-colors group"
         >
-          <div className="relative flex items-center justify-center">
+          <div className="relative">
             <ImageIcon
-              size={simple ? 16 : 24}
-              className="group-hover:opacity-10 transition-opacity duration-200"
+              size={32}
+              className="group-hover:opacity-20 transition-opacity"
             />
             <RefreshCw
-              size={simple ? 12 : 16}
-              className="absolute opacity-0 group-hover:opacity-100 animate-spin transition-opacity duration-200"
+              size={24}
+              className="absolute inset-0 m-auto opacity-0 group-hover:opacity-100 transition-opacity animate-spin"
             />
           </div>
-          {!simple && (
-            <span className="text-[10px] font-bold mt-1.5 uppercase tracking-tighter">
-              Failed, Retry
-            </span>
-          )}
+          <span className="text-[10px] font-black mt-2 uppercase tracking-tighter">
+            加载失败，点击重试
+          </span>
         </button>
-      )}
-
-      {/* 3. 真实图片元素 */}
-      {normalizedSrc && (
+      ) : (
         <img
-          src={finalSrc}
+          ref={imgRef}
+          src={optimizedSrc}
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}
           loading="lazy"
           className={`
-            transition-all duration-500 ease-out
+            transition-all duration-700 ease-out
             ${objectFit}
             ${fullHeight ? "w-full h-full" : "w-full h-auto block"}
-            ${status === "loaded" ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-102 blur-sm"}
+            ${isLoaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-105 blur-lg"}
             ${className}
           `}
-          {...props}
         />
       )}
     </div>
