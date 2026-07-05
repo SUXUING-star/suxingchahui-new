@@ -13,7 +13,7 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   return (
     <div className="w-full h-full">
       <Link
-        to={`/post/${post.id}`}
+        to={`/post/${post.slug}`} // 💡 彻底更改为 post.slug
         className="group h-full bg-white dark:bg-gray-800 rounded-[16px] sm:rounded-[24px] shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 dark:border-white/5 overflow-hidden flex flex-col"
       >
         {post.coverImage && (

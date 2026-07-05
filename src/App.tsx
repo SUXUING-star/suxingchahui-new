@@ -1,32 +1,32 @@
 // --- START OF FILE App.tsx ---
 
-import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { lazy, Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { AuthProvider } from '@/context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
-import { LayoutProvider, useLayout } from './context/LayoutContext';
-import { ModalProvider } from './context/ModalContext'; 
+import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
+import { LayoutProvider, useLayout } from "./context/LayoutContext";
+import { ModalProvider } from "./context/ModalContext";
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import LeftSidebar from '@/components/layout/LeftSidebar';
-import RightSidebar from '@/components/layout/RightSidebar';
-import BackgroundLayout from '@/components/layout/BackgroundLayout';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import GlobalModalWrapper from '@/components/layout/GlobalModalWrapper'; 
-import Broadcast from '@/components/common/Broadcast';
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import LeftSidebar from "@/components/layout/LeftSidebar";
+import RightSidebar from "@/components/layout/RightSidebar";
+import BackgroundLayout from "@/components/layout/BackgroundLayout";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import GlobalModalWrapper from "@/components/layout/GlobalModalWrapper";
+import Broadcast from "@/components/common/Broadcast";
 
-const Home = lazy(() => import('@/pages/Home'));
-const PostDetail = lazy(() => import('@/pages/PostDetail'));
-const About = lazy(() => import('@/pages/About'));
-const Categories = lazy(() => import('@/pages/Categories'));
-const Tags = lazy(() => import('@/pages/Tags'));
-const Archive = lazy(() => import('@/pages/Archive'));
-const MyPosts = lazy(() => import('@/pages/MyPosts'));
-const MyBooks = lazy(() => import('@/pages/MyBooks'));
-const AdminPending = lazy(() => import('@/pages/AdminPending'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
+const Home = lazy(() => import("@/pages/Home"));
+const PostDetail = lazy(() => import("@/pages/PostDetail"));
+const About = lazy(() => import("@/pages/About"));
+const Categories = lazy(() => import("@/pages/Categories"));
+const Tags = lazy(() => import("@/pages/Tags"));
+const Archive = lazy(() => import("@/pages/Archive"));
+const MyPosts = lazy(() => import("@/pages/MyPosts"));
+const MyBooks = lazy(() => import("@/pages/MyBooks"));
+const AdminPending = lazy(() => import("@/pages/AdminPending"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppLayout = () => {
   const { hideSidebars } = useLayout(); // 借用这个状态，或者你可以去 LayoutContext 加个 hideHeader
@@ -35,7 +35,6 @@ const AppLayout = () => {
     <BackgroundLayout>
       <div className="flex flex-col min-h-screen">
         <div className="flex-1 flex w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 gap-4">
-          
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-20 h-fit pb-10">
@@ -46,16 +45,16 @@ const AppLayout = () => {
 
           <div className="flex-1 min-w-0 flex flex-col">
             {/* 💡 关键：如果是全屏模式（MyBooks），隐藏全局 Header */}
-            {!hideSidebars && <Header />} 
-            
+            {!hideSidebars && <Header />}
+
             <main className="flex-1">
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/post/:id" element={<PostDetail />} />
+                  <Route path="/post/:slug" element={<PostDetail />} />
                   <Route path="/my-posts" element={<MyPosts />} />
                   <Route path="/admin/pending" element={<AdminPending />} />
-                  <Route path="/books" element={<MyBooks />} /> 
+                  <Route path="/books" element={<MyBooks />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/categories" element={<Categories />} />
                   <Route path="/tags" element={<Tags />} />
@@ -79,7 +78,7 @@ const AppLayout = () => {
         </div>
         <Broadcast />
       </div>
-      <GlobalModalWrapper /> 
+      <GlobalModalWrapper />
     </BackgroundLayout>
   );
 };
@@ -89,7 +88,7 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <LayoutProvider>
-          <ModalProvider> 
+          <ModalProvider>
             <Router>
               <AppLayout />
             </Router>
