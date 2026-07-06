@@ -14,7 +14,7 @@ import {
   getCategories,
 } from "../utils/postApi";
 import { useNotification } from "../context/NotificationContext";
-import { IPostResponse } from "../models/PostResponse";
+import { PostResponse } from "../models/PostResponse";
 import anime from "animejs";
 
 const POSTS_PER_PAGE = 24;
@@ -31,8 +31,8 @@ interface CategoryItem {
 const Home: React.FC = () => {
   const { showNotification } = useNotification();
 
-  const [posts, setPosts] = useState<IPostResponse[]>([]);
-  const [pinnedPosts, setPinnedPosts] = useState<IPostResponse[]>([]);
+  const [posts, setPosts] = useState<PostResponse[]>([]);
+  const [pinnedPosts, setPinnedPosts] = useState<PostResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
