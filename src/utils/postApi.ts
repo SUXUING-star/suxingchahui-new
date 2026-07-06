@@ -1,14 +1,16 @@
 // src/utils/postApi.ts
 
 import { apiGet, apiPost, apiPut, apiDelete, apiPostForm } from "./apiCore";
-import { PostResponse } from "../models/PostResponse";
+// 引入接口及其对应的工厂函数
+import { PostResponse, createPostResponse } from "../models/PostResponse";
 import { PostRequest } from "../models/PostRequest";
 
 // --- 业务转换工具 ---
 export const normalizePost = (rawPost: any): any => {
   if (!rawPost) return null;
-  if (Array.isArray(rawPost)) return rawPost.map((p) => new PostResponse(p));
-  return new PostResponse(rawPost);
+  // 替换为工厂函数形式
+  if (Array.isArray(rawPost)) return rawPost.map((p) => createPostResponse(p));
+  return createPostResponse(rawPost);
 };
 
 // --- 读操作 (GET) ---
@@ -85,7 +87,8 @@ export const apiCreatePost = (
   postRequest: PostRequest,
   token: string,
 ): Promise<any> => {
-  if (!(postRequest instanceof PostRequest))
+  // 由于 PostRequest 现在是 interface，运行时使用 typeof 校验 toJSON 方法是否存在
+  if (!postRequest || typeof postRequest.toJSON !== "function")
     throw new Error("Params must be PostRequest");
   return apiPost("/posts", postRequest.toJSON(), token);
 };

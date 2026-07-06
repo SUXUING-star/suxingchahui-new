@@ -1,4 +1,4 @@
-// --- START OF FILE PostRequest.ts ---
+// src/modeles/PostRequest.ts
 
 export interface ICoverImage {
   src: string;
@@ -17,69 +17,70 @@ export interface IDownload {
   url: string;
 }
 
-export class PostRequest {
-  public title: string;
-  public content: string;
-  public excerpt: string;
-  public category: string;
-  public tags: string[];
-  public coverImage: ICoverImage;
-  public contentImages: IContentImage[];
-  public downloads: IDownload[];
-  public topped?: boolean; // 1. 改为可选
+export interface PostRequest {
+  title: string;
+  content: string;
+  excerpt: string;
+  category: string;
+  tags: string[];
+  coverImage: ICoverImage;
+  contentImages: IContentImage[];
+  downloads: IDownload[];
+  topped?: boolean;
+  toJSON(): any;
+  validate(): void;
+}
 
-  constructor(data: Partial<PostRequest> = {}) {
-    this.title = data.title || '';
-    this.content = data.content || '';
-    this.excerpt = data.excerpt || '';
-    this.category = data.category || '未分类';
-    this.tags = Array.isArray(data.tags) ? data.tags : [];
-    
-    this.coverImage = {
-      src: data.coverImage?.src || '',
-      alt: data.coverImage?.alt || data.title || ''
-    };
+/**
+ * 创建请求数据对象
+ */
+export function createPostRequest(
+  data: Partial<PostRequest> = {},
+): PostRequest {
+  const topped = typeof data.topped === "boolean" ? data.topped : undefined;
 
-    this.contentImages = (data.contentImages || []).map(img => ({
+  return {
+    title: data.title || "",
+    content: data.content || "",
+    excerpt: data.excerpt || "",
+    category: data.category || "未分类",
+    tags: Array.isArray(data.tags) ? data.tags : [],
+    coverImage: {
+      src: data.coverImage?.src || "",
+      alt: data.coverImage?.alt || data.title || "",
+    },
+    contentImages: (data.contentImages || []).map((img) => ({
       _id: img._id,
       src: img.src,
-      alt: img.alt || ''
-    }));
-
-    this.downloads = (data.downloads || []).map(dl => ({
+      alt: img.alt || "",
+    })),
+    downloads: (data.downloads || []).map((dl) => ({
       _id: dl._id,
-      description: dl.description || '',
-      url: dl.url || ''
-    }));
+      description: dl.description || "",
+      url: dl.url || "",
+    })),
+    ...(topped !== undefined ? { topped } : {}),
+    toJSON() {
+      const serialized: any = {
+        title: this.title,
+        content: this.content,
+        excerpt: this.excerpt,
+        category: this.category,
+        tags: this.tags,
+        coverImage: this.coverImage,
+        contentImages: this.contentImages,
+        downloads: this.downloads,
+      };
 
-    // 2. 只有明确传入布尔值时才赋值，否则保持 undefined
-    if (typeof data.topped === 'boolean') {
-        this.topped = data.topped;
-    }
-  }
+      if (this.topped !== undefined) {
+        serialized.topped = this.topped;
+      }
 
-  toJSON() {
-    const data: any = {
-      title: this.title,
-      content: this.content,
-      excerpt: this.excerpt,
-      category: this.category,
-      tags: this.tags,
-      coverImage: this.coverImage,
-      contentImages: this.contentImages,
-      downloads: this.downloads,
-    };
-
-    // 3. 只有当 topped 被定义时才发送该字段
-    if (this.topped !== undefined) {
-        data.topped = this.topped;
-    }
-
-    return data;
-  }
-
-  validate(): void {
-    if (!this.title.trim()) throw new Error('文章标题不能为空');
-    if (!this.content.trim()) throw new Error('文章内容不能为空');
-  }
+      return serialized;
+    },
+    validate() {
+      if (!this.title.trim()) throw new Error("文章标题不能为空");
+      if (!this.content.trim()) throw new Error("文章内容不能为空");
+    },
+  };
 }
