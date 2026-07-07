@@ -1,17 +1,17 @@
 // src/modeles/PostRequest.ts
 
-export interface ICoverImage {
+export interface CoverImage {
   src: string;
   alt?: string;
 }
 
-export interface IContentImage {
+export interface ContentImage {
   _id: string;
   src: string;
   alt?: string;
 }
 
-export interface IDownload {
+export interface Download {
   _id: string;
   description: string;
   url: string;
@@ -23,9 +23,9 @@ export interface PostRequest {
   excerpt: string;
   category: string;
   tags: string[];
-  coverImage: ICoverImage;
-  contentImages: IContentImage[];
-  downloads: IDownload[];
+  coverImage: CoverImage;
+  contentImages: ContentImage[];
+  downloads: Download[];
   topped?: boolean;
   toJSON(): any;
   validate(): void;

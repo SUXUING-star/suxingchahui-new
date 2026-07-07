@@ -220,7 +220,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
               <div className="space-y-3">
                 {recentComments.map((c) => (
                   <div
-                    key={c._id}
+                    key={c.id}
                     className="text-[11px] leading-relaxed dark:text-gray-300"
                   >
                     <span className="font-black text-blue-500 mr-2">

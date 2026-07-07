@@ -1,30 +1,30 @@
-// NotFound.jsx
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import anime from 'animejs';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+// 1. 改为具名引入
+import { animate } from "animejs";
 
-const NotFound = () => {
+const NotFound: React.FC = () => {
   const navigate = useNavigate();
-  
+
   useEffect(() => {
-    anime({
-      targets: '.not-found-content',
+    // 2. 更改为 v4 的 animate 写法，并将 easing 改为 ease
+    animate(".not-found-content", {
       translateY: [50, 0],
       opacity: [0, 1],
       duration: 1000,
-      easing: 'spring(1, 80, 10, 0)'
+      ease: "spring(1, 80, 10, 0)", // v4 同样支持通过 ease 参数传入弹簧（spring）配置
     });
   }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-16 relative">
-      {/* 添加背景和模糊效果 */}
+      {/* 背景和模糊效果 */}
       <div className="absolute inset-0 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm z-0" />
-      
+
       <div className="not-found-content text-center relative z-10 w-full max-w-2xl">
         {/* 内容背景 */}
         <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-2xl shadow-xl z-[-1]" />
-        
+
         <div className="p-8 md:p-12">
           <div className="mb-8">
             <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent transform hover:scale-105 transition-transform duration-300">
@@ -40,7 +40,7 @@ const NotFound = () => {
 
           <div className="space-x-4">
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
               className="inline-flex items-center px-6 py-2 text-sm font-medium rounded-md text-white
                        bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600
                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
@@ -60,11 +60,13 @@ const NotFound = () => {
             </button>
           </div>
 
-          {/* 装饰性图案 - 改进视觉效果 */}
-          <div className="mt-12 text-gray-200 dark:text-gray-700 text-9xl font-mono 
-                        absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -z-10 
-                        opacity-20 select-none pointer-events-none blur-sm">
-            {'</>'}
+          {/* 装饰性图案 */}
+          <div
+            className="mt-12 text-gray-200 dark:text-gray-700 text-9xl font-mono
+                        absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -z-10
+                        opacity-20 select-none pointer-events-none blur-sm"
+          >
+            {"</>"}
           </div>
         </div>
       </div>

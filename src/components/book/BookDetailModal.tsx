@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import anime from "animejs";
+// 1. 改为具名引入
+import { animate } from "animejs";
 import {
   X,
   BookOpen,
@@ -24,6 +25,7 @@ import { updateBook } from "@/utils/bookApi";
 import { BookResponse } from "@/models/BookReponse";
 import { INITIAL_BOOK_FORM } from "@/models/BookRequest";
 import { BOOK_COUNTRIES, BOOK_TYPES } from "@/models/BookType";
+
 interface Props {
   book: BookResponse;
   onClose: () => void;
@@ -42,41 +44,52 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
     stories: book.stories || [],
   });
 
-  const modalRef = useRef(null);
-  const backdropRef = useRef(null);
+  // 2. 声明 Ref 类型，避免类型冲突
+  const modalRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
   // 入场动画
   useEffect(() => {
-    anime({
-      targets: backdropRef.current,
-      opacity: [0, 1],
-      duration: 300,
-      easing: "linear",
-    });
-    anime({
-      targets: modalRef.current,
-      scale: [0.9, 1],
-      translateY: [40, 0],
-      opacity: [0, 1],
-      duration: 800,
-      easing: "easeOutElastic(1, .8)",
-      complete: (anim) => {
-        anim.animatables.forEach(
-          (a) => ((a.target as HTMLElement).style.transform = ""),
-        );
-      },
-    });
+    if (backdropRef.current) {
+      animate(backdropRef.current, {
+        opacity: [0, 1],
+        duration: 300,
+        ease: "linear",
+      });
+    }
+    if (modalRef.current) {
+      animate(modalRef.current, {
+        scale: [0.9, 1],
+        translateY: [40, 0],
+        opacity: [0, 1],
+        duration: 800,
+        ease: "outElastic(1, .8)",
+        // 3. 原来的 complete 回调在 v4 中重命名为 onComplete
+        onComplete: () => {
+          if (modalRef.current) {
+            // 直接操作 React Ref 来恢复 Transform 状态，安全可靠
+            modalRef.current.style.transform = "";
+          }
+        },
+      });
+    }
   }, []);
 
   const handleClose = () => {
-    anime({
-      targets: [modalRef.current, backdropRef.current],
-      opacity: 0,
-      scale: 0.9,
-      duration: 200,
-      easing: "easeInQuad",
-      complete: onClose,
-    });
+    const targets = [modalRef.current, backdropRef.current].filter(
+      Boolean,
+    ) as HTMLElement[];
+    if (targets.length > 0) {
+      animate(targets, {
+        opacity: 0,
+        scale: 0.9,
+        duration: 200,
+        ease: "inQuad",
+        onComplete: onClose,
+      });
+    } else {
+      onClose();
+    }
   };
 
   const handleUpdate = async () => {
@@ -186,7 +199,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                 )}
               </span>
 
-              {/* 体裁 - 新增编辑逻辑 */}
+              {/* 体裁 */}
               <span className="flex items-center gap-1.5">
                 <Tag size={14} className="text-pink-500" />
                 {isEditing ? (
@@ -231,7 +244,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                 )}
               </span>
 
-              {/* 新增：具体国家 */}
+              {/* 具体国家 */}
               <span className="flex items-center gap-1.5">
                 <MapPin size={14} className="text-orange-500" />
                 {isEditing ? (
@@ -247,7 +260,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
                     }
                   />
                 ) : (
-                  formData.specificCountry || formData.country // 如果没填，就显示大类名称
+                  formData.specificCountry || formData.country
                 )}
               </span>
 
@@ -292,7 +305,7 @@ const BookDetailModal: React.FC<Props> = ({ book, onClose, onRefresh }) => {
 
         {/* 内容滚动区 */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 pt-2 space-y-10 custom-scrollbar">
-          {/* 篇目岛屿 (如果是短篇集则显示) */}
+          {/* 篇目岛屿 */}
           {formData.bookType === "collection" && (
             <section className="bg-blue-600/5 rounded-[32px] p-6 border border-blue-500/10">
               <h4 className="flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest mb-4">

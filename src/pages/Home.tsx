@@ -5,7 +5,7 @@ import React, {
   useRef,
   ChangeEvent,
 } from "react";
-import PostCard from "../components/common/PostCard";
+import PostCard from "../components/post/PostCard";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
 import {
@@ -15,7 +15,8 @@ import {
 } from "../utils/postApi";
 import { useNotification } from "../context/NotificationContext";
 import { PostResponse } from "../models/PostResponse";
-import anime from "animejs";
+// 1. 具名引入 animate 和 stagger
+import { animate, stagger } from "animejs";
 
 const POSTS_PER_PAGE = 24;
 
@@ -93,13 +94,13 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (!loading && (posts.length > 0 || pinnedPosts.length > 0)) {
-      anime({
-        targets: ".home-animate",
+      // 2. 更改为 v4 的 animate 写法，并使用 stagger 和 ease 参数名
+      animate(".home-animate", {
         translateY: [30, 0],
         opacity: [0, 1],
-        delay: anime.stagger(60),
+        delay: stagger(60),
         duration: 800,
-        easing: "easeOutExpo",
+        ease: "outExpo",
       });
     }
   }, [loading, posts, pinnedPosts]);
@@ -114,7 +115,7 @@ const Home: React.FC = () => {
     (setter: React.Dispatch<React.SetStateAction<string>>) =>
     (e: ChangeEvent<HTMLSelectElement>) => {
       setter(e.target.value);
-      setCurrentPage(1); // Reset page when filter changes
+      setCurrentPage(1);
     };
 
   const resetFilters = () => {

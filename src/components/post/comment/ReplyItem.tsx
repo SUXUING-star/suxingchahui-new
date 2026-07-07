@@ -35,7 +35,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
     setIsSubmitting(true);
     try {
       await apiPostComment(
-        { slug, content: replyContent, parentId: comment._id },
+        { slug, content: replyContent, parentId: comment.id },
         token,
       );
       showNotification("回复已发射", "success");
@@ -134,7 +134,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         <div className="space-y-1">
           {comment.replies.map((reply) => (
             <ReplyItem
-              key={reply._id}
+              key={reply.id}
               comment={reply}
               slug={slug}
               onRefresh={onRefresh}

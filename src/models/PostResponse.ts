@@ -4,7 +4,7 @@
  * 评论模型接口
  */
 export interface CommentResponse {
-  _id: string;
+  id: string;
   content: string;
   date: string;
   parentId: string | null;
@@ -45,7 +45,7 @@ export interface PostResponse {
  */
 export function createCommentResponse(raw: any = {}): CommentResponse {
   return {
-    _id: raw._id,
+    id: raw.id || raw._id,
     content: raw.content || "",
     date: raw.date || new Date().toISOString(),
     parentId: raw.parentId || null,

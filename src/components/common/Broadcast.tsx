@@ -1,29 +1,43 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
-import anime from 'animejs';
+import React, { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
+// 1. 引入最新的 v4 具名导出
+import { animate } from "animejs";
 
 const Broadcast: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem('hasVisited');
+    const hasVisited = localStorage.getItem("hasVisited");
     if (!hasVisited) {
       setIsVisible(true);
-      // 动画逻辑...
+
+      if (containerRef.current) {
+        animate(containerRef.current, {
+          opacity: [0, 1],
+          translateY: [20, 0],
+          duration: 500,
+          ease: "outQuart",
+        });
+      }
     }
   }, []);
 
   const handleClose = () => {
-    localStorage.setItem('hasVisited', 'true');
+    localStorage.setItem("hasVisited", "true");
     setIsVisible(false);
   };
 
   if (!isVisible) return null;
   return (
-    <div ref={containerRef} className="fixed bottom-24 left-0 right-0 px-4 z-50">
+    <div
+      ref={containerRef}
+      className="fixed bottom-24 left-0 right-0 px-4 z-50"
+    >
       {/* 渲染逻辑... */}
-      <button onClick={handleClose}><X /></button>
+      <button onClick={handleClose}>
+        <X />
+      </button>
     </div>
   );
 };

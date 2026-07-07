@@ -1,9 +1,13 @@
 # 宿星茶会新版
 
-本人全栈项目，预计有完整的社区功能，最快这个月会发布第一版版本，域名会相应更新
+本人的全栈项目，
 
-** 施工中ing....
+目前post功能基本完全，
+
+域名https://sxchahui.site，每年会更新一次域名
+
+
 
 # 预览
 
-![alt text](image.png)
+![alt text](public/images/preview.png)

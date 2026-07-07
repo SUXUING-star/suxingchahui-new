@@ -1,69 +1,82 @@
-import React, { useState, ChangeEvent } from 'react';
-import { MessageCircle, Send, Lock, MessageSquare, Loader2 } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
-import { useModal } from '../../../context/ModalContext';
-import { useNotification } from '../../../context/NotificationContext';
-import { apiPostComment, apiDeleteComment } from '../../../utils/postApi';
-import ConfirmModal from '../../common/ConfirmModal';
-import CommentItem from './CommentItem';
-import { Comment } from '../../../models/PostResponse';
+import React, { useState, ChangeEvent } from "react";
+import {
+  MessageCircle,
+  Send,
+  Lock,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
+import { useModal } from "../../../context/ModalContext";
+import { useNotification } from "../../../context/NotificationContext";
+import { apiPostComment, apiDeleteComment } from "../../../utils/postApi";
+import ConfirmModal from "../../common/ConfirmModal";
+import CommentItem from "./CommentItem";
+import { CommentResponse } from "../../../models/PostResponse";
 
 interface DeleteConfig {
   isOpen: boolean;
-  comment: Comment | null;
+  comment: CommentResponse | null;
 }
 
 interface CommentSectionProps {
-  comments: Comment[];
+  comments: CommentResponse[];
   slug: string;
   onRefresh: () => void;
 }
 
-const getTotalCount = (list: Comment[]): number => {
+const getTotalCount = (list: CommentResponse[]): number => {
   return list.reduce((count, item) => {
     return count + 1 + (item.replies ? getTotalCount(item.replies) : 0);
   }, 0);
 };
 
-const CommentSection: React.FC<CommentSectionProps> = ({ comments, slug, onRefresh }) => {
+const CommentSection: React.FC<CommentSectionProps> = ({
+  comments,
+  slug,
+  onRefresh,
+}) => {
   const { isAuthenticated, token } = useAuth();
   const { openAuthModal } = useModal();
   const { showNotification } = useNotification();
-  
-  const [mainContent, setMainContent] = useState<string>('');
+
+  const [mainContent, setMainContent] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [deleteConfig, setDeleteConfig] = useState<DeleteConfig>({ isOpen: false, comment: null });
+  const [deleteConfig, setDeleteConfig] = useState<DeleteConfig>({
+    isOpen: false,
+    comment: null,
+  });
 
   const handlePostMain = async () => {
     if (!mainContent.trim() || !token) return;
     setIsSubmitting(true);
     try {
       await apiPostComment({ slug, content: mainContent }, token);
-      showNotification('想法已发布', 'success');
-      setMainContent('');
+      showNotification("想法已发布", "success");
+      setMainContent("");
       onRefresh();
-    } catch (err: any) { 
-      showNotification(err.message || '发布失败', 'error'); 
-    } finally { 
-      setIsSubmitting(false); 
+    } catch (err: any) {
+      showNotification(err.message || "发布失败", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const executeDelete = async () => {
-    const commentId = deleteConfig.comment?._id;
+    const commentId = deleteConfig.comment?.id;
     if (!commentId || !token) return;
 
     setDeleteConfig({ isOpen: false, comment: null });
     try {
       await apiDeleteComment({ slug, commentId }, token);
-      showNotification('评论已永久删除', 'success');
+      showNotification("评论已永久删除", "success");
       onRefresh();
-    } catch (err: any) { 
-      showNotification(err.message || '删除失败', 'error'); 
+    } catch (err: any) {
+      showNotification(err.message || "删除失败", "error");
     }
   };
 
-  const handleOpenDeleteModal = (comment: Comment) => {
+  const handleOpenDeleteModal = (comment: CommentResponse) => {
     setDeleteConfig({ isOpen: true, comment });
   };
 
@@ -82,20 +95,35 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, slug, onRefre
 
       {/* 调整2: 输入框区域更紧凑 */}
       <div className="mb-10 relative">
-        <textarea 
-          rows={3} 
-          value={mainContent} 
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMainContent(e.target.value)}
-          placeholder={isAuthenticated ? "分享你的独到见解..." : "加入宿星茶会，参与深度讨论"}
+        <textarea
+          rows={3}
+          value={mainContent}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+            setMainContent(e.target.value)
+          }
+          placeholder={
+            isAuthenticated
+              ? "分享你的独到见解..."
+              : "加入宿星茶会，参与深度讨论"
+          }
           // 修改: text-xl -> text-base, rounded-[40px] -> rounded-3xl, p-5 -> p-4
-          className={`w-full p-4 px-5 rounded-3xl bg-white/40 dark:bg-black/20 border-2 border-transparent focus:border-blue-500 outline-none transition-all font-medium text-base dark:text-white resize-none shadow-inner ${!isAuthenticated && 'cursor-not-allowed opacity-60'}`}
+          className={`w-full p-4 px-5 rounded-3xl bg-white/40 dark:bg-black/20 border-2 border-transparent focus:border-blue-500 outline-none transition-all font-medium text-base dark:text-white resize-none shadow-inner ${!isAuthenticated && "cursor-not-allowed opacity-60"}`}
           readOnly={!isAuthenticated}
           onClick={() => !isAuthenticated && openAuthModal()}
         />
         {isAuthenticated ? (
           // 修改: 按钮更小一点，位置微调
-          <button onClick={handlePostMain} disabled={isSubmitting || !mainContent.trim()} className="absolute bottom-2.5 right-2.5 px-5 py-2 text-xs bg-blue-600 text-white rounded-2xl shadow-lg font-black flex items-center disabled:opacity-50 hover:scale-105 active:scale-95 transition-all">
-            {isSubmitting ? <Loader2 className="animate-spin mr-1.5" size={16} /> : <Send className="mr-1.5" size={16} />} 发表
+          <button
+            onClick={handlePostMain}
+            disabled={isSubmitting || !mainContent.trim()}
+            className="absolute bottom-2.5 right-2.5 px-5 py-2 text-xs bg-blue-600 text-white rounded-2xl shadow-lg font-black flex items-center disabled:opacity-50 hover:scale-105 active:scale-95 transition-all"
+          >
+            {isSubmitting ? (
+              <Loader2 className="animate-spin mr-1.5" size={16} />
+            ) : (
+              <Send className="mr-1.5" size={16} />
+            )}{" "}
+            发表
           </button>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -106,27 +134,31 @@ const CommentSection: React.FC<CommentSectionProps> = ({ comments, slug, onRefre
         )}
       </div>
 
-      <div className="space-y-6"> {/* 间距从 8 减到 6 */}
+      <div className="space-y-6">
+        {" "}
+        {/* 间距从 8 减到 6 */}
         {comments && comments.length > 0 ? (
-          comments.map(c => (
-            <CommentItem 
-              key={c._id} 
-              comment={c} 
-              slug={slug} 
-              onRefresh={onRefresh} 
-              onOpenDeleteModal={handleOpenDeleteModal} 
+          comments.map((c) => (
+            <CommentItem
+              key={c.id}
+              comment={c}
+              slug={slug}
+              onRefresh={onRefresh}
+              onOpenDeleteModal={handleOpenDeleteModal}
             />
           ))
         ) : (
           // 调整3: 空状态高度减半
           <div className="py-12 text-center opacity-30">
-             <MessageSquare size={36} className="mx-auto mb-3" />
-             <p className="font-black uppercase tracking-[0.3em] text-xs">虚位以待</p>
+            <MessageSquare size={36} className="mx-auto mb-3" />
+            <p className="font-black uppercase tracking-[0.3em] text-xs">
+              虚位以待
+            </p>
           </div>
         )}
       </div>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={deleteConfig.isOpen}
         onClose={() => setDeleteConfig({ isOpen: false, comment: null })}
         onConfirm={executeDelete}

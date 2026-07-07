@@ -1,5 +1,11 @@
-import React from 'react';
-import { Twitter, Facebook, Linkedin, Link as LinkIcon, LucideIcon } from 'lucide-react';
+import React from "react";
+import {
+  Twitter,
+  Facebook,
+  Linkedin,
+  Link as LinkIcon,
+  LucideIcon,
+} from "lucide-react";
 
 interface ShareButtonsProps {
   title: string;
@@ -19,31 +25,31 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({ title, url }) => {
 
   const shareLinks: ShareLink[] = [
     {
-      name: 'Twitter',
+      name: "Twitter",
       icon: Twitter,
       url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
-      color: 'bg-[#1DA1F2] hover:bg-[#1a91da]'
+      color: "bg-[#1DA1F2] hover:bg-[#1a91da]",
     },
     {
-      name: 'Facebook',
+      name: "Facebook",
       icon: Facebook,
       url: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-      color: 'bg-[#4267B2] hover:bg-[#365899]'
+      color: "bg-[#4267B2] hover:bg-[#365899]",
     },
     {
-      name: 'LinkedIn',
+      name: "LinkedIn",
       icon: Linkedin,
       url: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`,
-      color: 'bg-[#0077B5] hover:bg-[#006399]'
-    }
+      color: "bg-[#0077B5] hover:bg-[#006399]",
+    },
   ];
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      alert('链接已复制到剪贴板！');
+      alert("链接已复制到剪贴板！");
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error("复制失败:", err);
     }
   };
 

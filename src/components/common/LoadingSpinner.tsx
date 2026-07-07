@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 const SAO_HUA: readonly string[] = [
   "正在同步异世界的信号...",
@@ -10,7 +10,7 @@ const SAO_HUA: readonly string[] = [
   "正在加载 99.9%... 还差亿点点...",
   "正在献祭一枚硬币以加速...",
   "正在调整宇宙常数...",
-  "正在躲避降智打击..."
+  "正在躲避降智打击...",
 ];
 
 const LoadingSpinner: React.FC = () => {
@@ -23,7 +23,6 @@ const LoadingSpinner: React.FC = () => {
   return (
     <div className="flex items-center justify-center py-20 w-full animate-in fade-in duration-700">
       <div className="flex flex-col items-center p-12 bg-white/90 dark:bg-gray-800/95 border border-gray-100 dark:border-white/5 rounded-[48px] shadow-2xl">
-        
         {/* 高级流光环容器 */}
         <div className="relative w-16 h-16 flex items-center justify-center">
           {/* 核心光束：拖尾逐渐透明变细 */}
@@ -33,17 +32,19 @@ const LoadingSpinner: React.FC = () => {
         </div>
 
         <div className="mt-10 flex flex-col items-center">
-            <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.5em] mb-3">
-                载入中
-            </span>
-            <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 italic uppercase tracking-widest text-center">
-              {quote}
-            </p>
+          <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.5em] mb-3">
+            载入中
+          </span>
+          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 italic uppercase tracking-widest text-center">
+            {quote}
+          </p>
         </div>
       </div>
 
       {/* 纯 CSS 绘制的流光与蒙版 */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         /* 核心流光层 */
         .loader-sunlight {
           background: conic-gradient(from 180deg at 50% 50%, transparent 0%, transparent 40%, rgba(59, 130, 246, 0.3) 70%, rgba(59, 130, 246, 1) 100%);
@@ -52,7 +53,7 @@ const LoadingSpinner: React.FC = () => {
           mask: radial-gradient(transparent 58%, #000 59%);
           animation: spin-sunlight 1.2s linear infinite;
         }
-        
+
         /* 头部耀眼的光球 (像彗星头) */
         .loader-sunlight::after {
           content: '';
@@ -80,7 +81,9 @@ const LoadingSpinner: React.FC = () => {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-      `}} />
+      `,
+        }}
+      />
     </div>
   );
 };

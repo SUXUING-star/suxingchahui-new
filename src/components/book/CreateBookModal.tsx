@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import anime from "animejs";
+// 1. 改为具名引入
+import { animate } from "animejs";
 import {
   X,
   Save,
@@ -39,39 +40,48 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({
   const [rawText, setRawText] = useState("");
   const [batchPreview, setBatchPreview] = useState<any[]>([]);
 
-  const modalRef = useRef(null);
-  const backdropRef = useRef(null);
+  // 2. 显式声明 Ref 类型，避免 null 类型报错
+  const modalRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLDivElement>(null);
 
-  // 💡 样例更新：增加了第六位“具体国家”
   const EXAMPLE_TEXT =
     "百年孤独 - 马尔克斯 - 1967 - 美洲 - 中长篇 - 哥伦比亚, 围城 - 钱锺书 - 1947 - 中国 - 中长篇 - 中国";
 
   useEffect(() => {
-    anime({
-      targets: backdropRef.current,
-      opacity: [0, 1],
-      duration: 300,
-      easing: "linear",
-    });
-    anime({
-      targets: modalRef.current,
-      scale: [0.9, 1],
-      translateY: [40, 0],
-      opacity: [0, 1],
-      duration: 800,
-      easing: "easeOutElastic(1, .8)",
-    });
+    if (backdropRef.current) {
+      animate(backdropRef.current, {
+        opacity: [0, 1],
+        duration: 300,
+        ease: "linear",
+      });
+    }
+    if (modalRef.current) {
+      animate(modalRef.current, {
+        scale: [0.9, 1],
+        translateY: [40, 0],
+        opacity: [0, 1],
+        duration: 800,
+        ease: "outElastic(1, .8)",
+      });
+    }
   }, []);
 
   const handleClose = () => {
-    anime({
-      targets: [modalRef.current, backdropRef.current],
-      opacity: 0,
-      scale: 0.9,
-      duration: 200,
-      easing: "easeInQuad",
-      complete: onClose,
-    });
+    // 3. 过滤并排除 null 节点，确保类型安全
+    const targets = [modalRef.current, backdropRef.current].filter(
+      Boolean,
+    ) as HTMLElement[];
+    if (targets.length > 0) {
+      animate(targets, {
+        opacity: 0,
+        scale: 0.9,
+        duration: 200,
+        ease: "inQuad",
+        onComplete: onClose, // 4. complete 改为 onComplete
+      });
+    } else {
+      onClose();
+    }
   };
 
   const handleParse = () => {
@@ -93,7 +103,7 @@ const CreateBookModal: React.FC<CreateBookModalProps> = ({
         author: parts[1] || "未知",
         year: parts[2] || "",
         country: parts[3] || "中国",
-        specificCountry: parts[5] || "", // 💡 识别第六个字段
+        specificCountry: parts[5] || "",
         bookType: matchedType,
         status: "unread",
         stories: [],

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { FolderOpen, ChevronDown, ChevronRight } from 'lucide-react';
-import { getCategories } from '../utils/postApi';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import StatusPlaceholder from '../components/common/StatusPlaceholder';
-import PostCard from '../components/common/PostCard';
-import anime from 'animejs';
-import { PostResponse } from '../models/PostResponse';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { FolderOpen, ChevronDown, ChevronRight } from "lucide-react";
+import { getCategories } from "../utils/postApi";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import StatusPlaceholder from "../components/common/StatusPlaceholder";
+import PostCard from "../components/post/PostCard";
+// 1. 具名引入 animate 和 stagger
+import { animate, stagger } from "animejs";
+import { PostResponse } from "../models/PostResponse";
 
 interface CategoryData {
   _id: string;
@@ -42,28 +43,49 @@ const Categories: React.FC = () => {
 
   useEffect(() => {
     if (!loading && categories.length > 0) {
-        anime({ 
-          targets: '.cat-card-animate', 
-          translateY: [20, 0], 
-          opacity: [0, 1], 
-          delay: anime.stagger(100), 
-          duration: 800, 
-          easing: 'easeOutExpo' 
-        });
+      // 2. 更改为 v4 的 animate 写法，并使用 stagger 和 ease 参数名
+      animate(".cat-card-animate", {
+        translateY: [20, 0],
+        opacity: [0, 1],
+        delay: stagger(100),
+        duration: 800,
+        ease: "outExpo",
+      });
     }
   }, [loading, categories]);
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <StatusPlaceholder type="error" title="分类索引损坏" onRetry={fetchCats} />;
-  if (categories.length === 0) return <StatusPlaceholder type="empty" title="暂无分类" message="目前还没有任何星火被归类" />;
+  if (error)
+    return (
+      <StatusPlaceholder
+        type="error"
+        title="分类索引损坏"
+        onRetry={fetchCats}
+      />
+    );
+  if (categories.length === 0)
+    return (
+      <StatusPlaceholder
+        type="empty"
+        title="暂无分类"
+        message="目前还没有任何星火被归类"
+      />
+    );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="space-y-6">
         {categories.map((catData) => (
-          <div key={catData._id} className="cat-card-animate bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[40px] overflow-hidden border border-white/20 shadow-xl">
+          <div
+            key={catData._id}
+            className="cat-card-animate bg-white/85 dark:bg-gray-900/90 backdrop-blur-2xl rounded-[40px] overflow-hidden border border-white/20 shadow-xl"
+          >
             <button
-              onClick={() => setExpandedCategory(expandedCategory === catData._id ? null : catData._id)}
+              onClick={() =>
+                setExpandedCategory(
+                  expandedCategory === catData._id ? null : catData._id,
+                )
+              }
               className="w-full px-10 py-8 flex items-center justify-between hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all"
             >
               <div className="flex items-center space-x-6">
@@ -71,18 +93,28 @@ const Categories: React.FC = () => {
                   <FolderOpen size={32} />
                 </div>
                 <div className="text-left">
-                  <span className="text-2xl font-black text-gray-900 dark:text-gray-100 block tracking-tighter uppercase">{catData._id}</span>
-                  <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{catData.count} 篇文章</span>
+                  <span className="text-2xl font-black text-gray-900 dark:text-gray-100 block tracking-tighter uppercase">
+                    {catData._id}
+                  </span>
+                  <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                    {catData.count} 篇文章
+                  </span>
                 </div>
               </div>
-              {expandedCategory === catData._id ? <ChevronDown size={28} className="text-blue-500" /> : <ChevronRight size={28} className="text-gray-300" />}
+              {expandedCategory === catData._id ? (
+                <ChevronDown size={28} className="text-blue-500" />
+              ) : (
+                <ChevronRight size={28} className="text-gray-300" />
+              )}
             </button>
 
             {expandedCategory === catData._id && (
               <div className="px-10 pb-12 animate-in fade-in zoom-in-95 duration-500">
                 <div className="border-t dark:border-white/5 pt-10">
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 p-4">
-                    {catData.posts.map(post => <PostCard key={post.id} post={post} />)}
+                    {catData.posts.map((post) => (
+                      <PostCard key={post.id} post={post} />
+                    ))}
                   </div>
                 </div>
               </div>

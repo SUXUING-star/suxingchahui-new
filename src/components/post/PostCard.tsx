@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import LazyImage from "./LazyImage";
-import UserBadge from "./UserBadge";
+import LazyImage from "../common/LazyImage";
+import UserBadge from "../common/UserBadge";
 import { Clock, Folder, Eye, Tag, MessageCircle } from "lucide-react"; // 新增 Tag 图标
 import { PostResponse } from "@/models/PostResponse";
 

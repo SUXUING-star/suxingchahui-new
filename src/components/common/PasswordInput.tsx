@@ -1,5 +1,5 @@
-import React, { useState, ChangeEvent } from 'react';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import React, { useState, ChangeEvent } from "react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 
 interface PasswordInputProps {
   value: string;
@@ -12,21 +12,24 @@ interface PasswordInputProps {
   label?: string;
 }
 
-const PasswordInput: React.FC<PasswordInputProps> = ({ 
-  value, 
-  onChange, 
-  id, 
-  name, 
-  placeholder = "请输入密码", 
+const PasswordInput: React.FC<PasswordInputProps> = ({
+  value,
+  onChange,
+  id,
+  name,
+  placeholder = "请输入密码",
   autoComplete = "current-password",
   required = true,
-  label = "密码"
+  label = "密码",
 }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label
+        htmlFor={id}
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
         {label}
       </label>
       <div className="relative">

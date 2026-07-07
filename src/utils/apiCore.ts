@@ -1,7 +1,7 @@
 // src/utils/apiCore.ts
 
-import API_BASE_URL from './apiConfig';
-import pako from 'pako';
+import API_BASE_URL from "./apiConfig";
+import pako from "pako";
 
 // --- 内部请求管理变量 (仅用于 GET 缓存) ---
 const pendingRequests = new Map<string, Promise<any>>();
@@ -10,7 +10,7 @@ const CACHE_TTL = 2000;
 
 // --- 类型定义 ---
 interface ApiClientOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   token?: string | null;
   body?: any;
   headers?: HeadersInit; // 允许完全自定义或覆盖 header
@@ -23,25 +23,30 @@ interface ApiClientOptions {
  */
 const handleResponse = async <T>(res: Response): Promise<T> => {
   if (res.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    throw new Error('登录已过期，请重新登录');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    throw new Error("登录已过期，请重新登录");
   }
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: `请求失败: ${res.status}` }));
-    throw new Error(errorData.message || '未知网络错误');
+    const errorData = await res
+      .json()
+      .catch(() => ({ message: `请求失败: ${res.status}` }));
+    throw new Error(errorData.message || "未知网络错误");
   }
 
   if (res.status === 204) return {} as T;
 
   // ✨ 核心魔法：检测是否被压缩
-  const isCompressed = res.headers.get('X-Response-Compressed') === 'true' || 
-                       res.headers.get('Content-Encoding') === 'gzip';
+  const isCompressed =
+    res.headers.get("X-Response-Compressed") === "true" ||
+    res.headers.get("Content-Encoding") === "gzip";
 
   if (isCompressed) {
     const arrayBuffer = await res.arrayBuffer();
-    const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: 'string' });
+    const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), {
+      to: "string",
+    });
     return JSON.parse(decompressed);
   }
 
@@ -53,9 +58,12 @@ const handleResponse = async <T>(res: Response): Promise<T> => {
  * @param endpoint API 路径, e.g., '/posts/123'
  * @param options 所有请求配置
  */
-const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> => {
+const apiClient = async <T>(
+  endpoint: string,
+  options: ApiClientOptions = {},
+): Promise<T> => {
   const {
-    method = 'GET',
+    method = "GET",
     token = null,
     body,
     headers: customHeaders,
@@ -66,8 +74,8 @@ const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): P
   const url = `${API_BASE_URL}${endpoint}`;
 
   // --- GET 请求走缓存和请求合并逻辑 ---
-  if (method === 'GET') {
-    const authHeader = token ? `Bearer ${token}` : '';
+  if (method === "GET") {
+    const authHeader = token ? `Bearer ${token}` : "";
     const cacheKey = `${url}_${authHeader}`;
 
     if (dataCache.has(cacheKey)) return dataCache.get(cacheKey);
@@ -75,7 +83,9 @@ const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): P
 
     const requestPromise = (async () => {
       try {
-        const res = await fetch(url, { headers: { 'Authorization': authHeader } });
+        const res = await fetch(url, {
+          headers: { Authorization: authHeader },
+        });
         let data = await handleResponse<any>(res);
         if (processor) data = processor(data);
 
@@ -86,7 +96,7 @@ const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): P
         pendingRequests.delete(cacheKey);
       }
     })();
-    
+
     pendingRequests.set(cacheKey, requestPromise);
     return requestPromise;
   }
@@ -96,12 +106,12 @@ const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): P
 
   // 默认 Content-Type，除非是 FormData 或用户自定义了
   if (body && !isFormData) {
-    finalHeaders['Content-Type'] = 'application/json';
+    finalHeaders["Content-Type"] = "application/json";
   }
 
   // 添加 token
   if (token) {
-    finalHeaders['Authorization'] = `Bearer ${token}`;
+    finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
   // 用户自定义的 header 优先级最高，可以覆盖上面的所有默认值
@@ -126,17 +136,38 @@ const apiClient = async <T>(endpoint: string, options: ApiClientOptions = {}): P
 
 // --- 对外暴露的便捷方法 (完全向后兼容，不用改业务代码) ---
 
-export const apiGet = <T>(endpoint: string, token: string | null = null, processor?: (data: any) => T): Promise<T> =>
-  apiClient<T>(endpoint, { method: 'GET', token, processor });
+export const apiGet = <T>(
+  endpoint: string,
+  token: string | null = null,
+  processor?: (data: any) => T,
+): Promise<T> => apiClient<T>(endpoint, { method: "GET", token, processor });
 
-export const apiPost = <T>(endpoint: string, body: any, token: string | null = null): Promise<T> =>
-  apiClient<T>(endpoint, { method: 'POST', body, token });
+export const apiPost = <T>(
+  endpoint: string,
+  body: any,
+  token: string | null = null,
+): Promise<T> => apiClient<T>(endpoint, { method: "POST", body, token });
 
-export const apiPut = <T>(endpoint: string, body: any, token: string | null): Promise<T> =>
-  apiClient<T>(endpoint, { method: 'PUT', body, token });
+export const apiPut = <T>(
+  endpoint: string,
+  body: any,
+  token: string | null,
+): Promise<T> => apiClient<T>(endpoint, { method: "PUT", body, token });
 
-export const apiDelete = <T>(endpoint: string, token: string | null, body?: any): Promise<T> =>
-  apiClient<T>(endpoint, { method: 'DELETE', token, body });
+export const apiDelete = <T>(
+  endpoint: string,
+  token: string | null,
+  body?: any,
+): Promise<T> => apiClient<T>(endpoint, { method: "DELETE", token, body });
 
-export const apiPostForm = <T>(endpoint: string, formData: FormData, token: string | null): Promise<T> =>
-  apiClient<T>(endpoint, { method: 'POST', body: formData, token, isFormData: true });
+export const apiPostForm = <T>(
+  endpoint: string,
+  formData: FormData,
+  token: string | null,
+): Promise<T> =>
+  apiClient<T>(endpoint, {
+    method: "POST",
+    body: formData,
+    token,
+    isFormData: true,
+  });

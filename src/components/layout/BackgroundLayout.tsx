@@ -1,6 +1,6 @@
-import React, { useState, useEffect, ReactNode } from 'react';
-import { useLayout } from '../../context/LayoutContext';
-import defaultBg from '../../assets/bg.jpg';
+import React, { useState, useEffect, ReactNode } from "react";
+import { useLayout } from "../../context/LayoutContext";
+import defaultBg from "/images/bg.jpg";
 
 interface BackgroundLayoutProps {
   children: ReactNode;
@@ -28,12 +28,13 @@ const BackgroundLayout: React.FC<BackgroundLayoutProps> = ({ children }) => {
     }
   }, [customBg]);
 
-  const commonImgClass = "fixed inset-0 bg-cover bg-center transition-all duration-700 z-[-2] dark:brightness-[0.85] dark:contrast-110 dark:saturate-75";
+  const commonImgClass =
+    "fixed inset-0 bg-cover bg-center transition-all duration-700 z-[-2] dark:brightness-[0.85] dark:contrast-110 dark:saturate-75";
 
   const commonStyle: React.CSSProperties = {
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
   };
 
   return (
@@ -43,7 +44,7 @@ const BackgroundLayout: React.FC<BackgroundLayoutProps> = ({ children }) => {
         style={{
           ...commonStyle,
           backgroundImage: `url(${defaultBg})`,
-          opacity: 1
+          opacity: 1,
         }}
         aria-hidden="true"
       />
@@ -54,19 +55,17 @@ const BackgroundLayout: React.FC<BackgroundLayoutProps> = ({ children }) => {
           ...commonStyle,
           backgroundImage: `url(${activeBg})`,
           opacity: showCustom ? 1 : 0,
-          transform: showCustom ? 'scale(1)' : 'scale(1.05)'
+          transform: showCustom ? "scale(1)" : "scale(1.05)",
         }}
         aria-hidden="true"
       />
-      
-      <div 
+
+      <div
         className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-[4px] dark:backdrop-blur-[4px] transition-all duration-300 z-[-1]"
         aria-hidden="true"
       />
 
-      <div className="relative z-0">
-        {children}
-      </div>
+      <div className="relative z-0">{children}</div>
     </div>
   );
 };

@@ -1,5 +1,3 @@
-// --- START OF FILE App.tsx ---
-
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
@@ -29,24 +27,25 @@ const AdminPending = lazy(() => import("@/pages/AdminPending"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const AppLayout = () => {
-  const { hideSidebars } = useLayout(); // 借用这个状态，或者你可以去 LayoutContext 加个 hideHeader
+  const { hideSidebars } = useLayout();
 
   return (
     <BackgroundLayout>
       <div className="flex flex-col min-h-screen">
+        {/* 💡 移到这里：Header 独占最顶部，宽度不受侧边栏挤压 */}
+        {!hideSidebars && <Header />}
+
+        {/* 下方放置侧边栏和主内容区 */}
         <div className="flex-1 flex w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 gap-4">
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
-              <div className="sticky top-20 h-fit pb-10">
+              <div className="sticky top-24 h-fit pb-10">
                 <LeftSidebar />
               </div>
             </div>
           )}
 
           <div className="flex-1 min-w-0 flex flex-col">
-            {/* 💡 关键：如果是全屏模式（MyBooks），隐藏全局 Header */}
-            {!hideSidebars && <Header />}
-
             <main className="flex-1">
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
@@ -64,13 +63,12 @@ const AppLayout = () => {
               </Suspense>
             </main>
 
-            {/* 💡 关键：全屏模式下 Footer 也可以考虑藏掉或精简 */}
             {!hideSidebars && <Footer />}
           </div>
 
           {!hideSidebars && (
             <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
-              <div className="sticky top-20 h-fit pb-10">
+              <div className="sticky top-24 h-fit pb-10">
                 <RightSidebar />
               </div>
             </div>

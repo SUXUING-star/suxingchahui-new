@@ -1,171 +1,235 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>宿星茶会</title>
-    <meta name="description" content="宿星茶会 - ACG爱好者小站" />
-    <meta name="theme-color" content="#ffffff" />
-    
-    <style>
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      }
-      
-#initial-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: #f0f9ff;
-        opacity: 1;
-        transition: opacity 0.5s ease;
-        overflow: hidden;
-      }
-      #initial-loader.hide { opacity: 0; pointer-events: none; }
-      
-      .string-background {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        justify-content: space-around;
-        opacity: 0.2;
-        filter: blur(1px);
-      }
-      .string-line {
-        position: relative;
-        height: 100%;
-        animation: stringWave 4s ease-in-out infinite;
-      }
-      .string-line-inner {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background-image: linear-gradient(to bottom, transparent, #3b82f6, transparent);
-      }
-      @keyframes stringWave {
-        0%, 100% { transform: translateX(0) scaleY(0.98); }
-        50% { transform: translateX(5px) scaleY(1.02); }
-      }
-      .string-line:nth-child(2) { animation-delay: 0.2s; }
-      .string-line:nth-child(3) { animation-delay: 0.4s; animation-duration: 3.5s; }
-      .string-line:nth-child(4) { animation-delay: 0.6s; }
-      .string-line:nth-child(5) { animation-delay: 0.8s; animation-duration: 4.5s; }
-      .string-line:nth-child(6) { animation-delay: 1s; }
-      .string-line:nth-child(7) { animation-delay: 1.2s; animation-duration: 3.8s; }
-      .string-line:nth-child(8) { animation-delay: 1.4s; }
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="icons/favicon.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>宿星茶会</title>
+        <meta name="description" content="宿星茶会 - ACG爱好者小站" />
+        <meta name="theme-color" content="#ffffff" />
 
+        <style>
+            body {
+                margin: 0;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+                    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+                    "Helvetica Neue", sans-serif;
+            }
 
-      .loader-stage {
-        position: relative;
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+            #initial-loader {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background-color: #f0f9ff;
+                opacity: 1;
+                transition: opacity 0.5s ease;
+                overflow: hidden;
+            }
+            #initial-loader.hide {
+                opacity: 0;
+                pointer-events: none;
+            }
 
-      .loader-ring-wrapper {
-        position: relative;
-        width: 64px;
-        height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+            .string-background {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                justify-content: space-around;
+                opacity: 0.2;
+                filter: blur(1px);
+            }
+            .string-line {
+                position: relative;
+                height: 100%;
+                animation: stringWave 4s ease-in-out infinite;
+            }
+            .string-line-inner {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background-image: linear-gradient(
+                    to bottom,
+                    transparent,
+                    #3b82f6,
+                    transparent
+                );
+            }
+            @keyframes stringWave {
+                0%,
+                100% {
+                    transform: translateX(0) scaleY(0.98);
+                }
+                50% {
+                    transform: translateX(5px) scaleY(1.02);
+                }
+            }
+            .string-line:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .string-line:nth-child(3) {
+                animation-delay: 0.4s;
+                animation-duration: 3.5s;
+            }
+            .string-line:nth-child(4) {
+                animation-delay: 0.6s;
+            }
+            .string-line:nth-child(5) {
+                animation-delay: 0.8s;
+                animation-duration: 4.5s;
+            }
+            .string-line:nth-child(6) {
+                animation-delay: 1s;
+            }
+            .string-line:nth-child(7) {
+                animation-delay: 1.2s;
+                animation-duration: 3.8s;
+            }
+            .string-line:nth-child(8) {
+                animation-delay: 1.4s;
+            }
 
-      /* 核心流光层 (快) */
-      .loader-sunlight {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        background: conic-gradient(from 180deg at 50% 50%, transparent 0%, transparent 40%, rgba(59, 130, 246, 0.3) 70%, rgba(59, 130, 246, 1) 100%);
-        -webkit-mask: radial-gradient(transparent 58%, #000 59%);
-        mask: radial-gradient(transparent 58%, #000 59%);
-        animation: spin-effect 1.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-      }
-      
-      .loader-sunlight::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 12%;
-        height: 12%;
-        background: #ffffff;
-        border-radius: 50%;
-        box-shadow: 0 0 12px 3px rgba(59, 130, 246, 0.9);
-      }
+            .loader-stage {
+                position: relative;
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
 
-      /* 模糊拖尾层 (慢) */
-      .loader-sunlight-blur {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        background: conic-gradient(from 180deg at 50% 50%, transparent 0%, transparent 30%, rgba(59, 130, 246, 0.2) 60%, rgba(59, 130, 246, 0.7) 100%);
-        -webkit-mask: radial-gradient(transparent 45%, #000 46%);
-        mask: radial-gradient(transparent 45%, #000 46%);
-        filter: blur(6px);
-        animation: spin-effect 1.8s ease-out infinite;
-      }
+            .loader-ring-wrapper {
+                position: relative;
+                width: 64px;
+                height: 64px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
 
-      @keyframes spin-effect {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
+            /* 核心流光层 (快) */
+            .loader-sunlight {
+                position: absolute;
+                inset: 0;
+                border-radius: 50%;
+                background: conic-gradient(
+                    from 180deg at 50% 50%,
+                    transparent 0%,
+                    transparent 40%,
+                    rgba(59, 130, 246, 0.3) 70%,
+                    rgba(59, 130, 246, 1) 100%
+                );
+                -webkit-mask: radial-gradient(transparent 58%, #000 59%);
+                mask: radial-gradient(transparent 58%, #000 59%);
+                animation: spin-effect 1.5s cubic-bezier(0.16, 1, 0.3, 1)
+                    infinite;
+            }
 
-      .loader-text {
-        margin-top: 36px;
-        font-size: 11px;
-        font-weight: 900;
-        color: #1e293b;
-        letter-spacing: 0.6em;
-        text-transform: uppercase;
-        opacity: 0.6;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="initial-loader">
-      <div class="string-background">
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-        <div class="string-line"><div class="string-line-inner"></div></div>
-      </div>
-      <div class="loader-stage">
-        
-        <!-- 新的高级流光环 -->
-        <div class="loader-ring-wrapper">
-          <div class="loader-sunlight"></div>
-          <div class="loader-sunlight-blur"></div>
+            .loader-sunlight::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 12%;
+                height: 12%;
+                background: #ffffff;
+                border-radius: 50%;
+                box-shadow: 0 0 12px 3px rgba(59, 130, 246, 0.9);
+            }
+
+            /* 模糊拖尾层 (慢) */
+            .loader-sunlight-blur {
+                position: absolute;
+                inset: 0;
+                border-radius: 50%;
+                background: conic-gradient(
+                    from 180deg at 50% 50%,
+                    transparent 0%,
+                    transparent 30%,
+                    rgba(59, 130, 246, 0.2) 60%,
+                    rgba(59, 130, 246, 0.7) 100%
+                );
+                -webkit-mask: radial-gradient(transparent 45%, #000 46%);
+                mask: radial-gradient(transparent 45%, #000 46%);
+                filter: blur(6px);
+                animation: spin-effect 1.8s ease-out infinite;
+            }
+
+            @keyframes spin-effect {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .loader-text {
+                margin-top: 36px;
+                font-size: 11px;
+                font-weight: 900;
+                color: #1e293b;
+                letter-spacing: 0.6em;
+                text-transform: uppercase;
+                opacity: 0.6;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="initial-loader">
+            <div class="string-background">
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+                <div class="string-line">
+                    <div class="string-line-inner"></div>
+                </div>
+            </div>
+            <div class="loader-stage">
+                <!-- 新的高级流光环 -->
+                <div class="loader-ring-wrapper">
+                    <div class="loader-sunlight"></div>
+                    <div class="loader-sunlight-blur"></div>
+                </div>
+
+                <div class="loader-text">宿星茶会</div>
+            </div>
         </div>
-
-        <div class="loader-text">宿星茶会</div>
-      </div>
-    </div>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
-      window.addEventListener('load', () => {
-        const loader = document.getElementById('initial-loader');
-        if (loader) {
-          loader.classList.add('hide');
-          setTimeout(() => {
-            loader.remove();
-          }, 500);
-        }
-      });
-    </script>
-  </body>
+        <div id="root"></div>
+        <script type="module" src="/src/main.tsx"></script>
+        <script>
+            window.addEventListener("load", () => {
+                const loader = document.getElementById("initial-loader");
+                if (loader) {
+                    loader.classList.add("hide");
+                    setTimeout(() => {
+                        loader.remove();
+                    }, 500);
+                }
+            });
+        </script>
+    </body>
 </html>

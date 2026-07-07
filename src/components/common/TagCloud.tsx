@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
 interface TagItem {
   tag: string;
@@ -14,16 +14,16 @@ const TagCloud: React.FC<TagCloudProps> = ({ tagData }) => {
   if (!tagData || tagData.length === 0) return null;
 
   const colors: readonly string[] = [
-    'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800',
-    'bg-slate-50 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400 border-slate-100 dark:border-slate-700',
-    'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800',
+    "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-800",
+    "bg-slate-50 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400 border-slate-100 dark:border-slate-700",
+    "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800",
   ];
 
   return (
     <div className="flex flex-wrap gap-2">
       {tagData.map((item, index) => {
         const colorClass = colors[index % colors.length];
-        
+
         return (
           <Link
             key={item.tag}
