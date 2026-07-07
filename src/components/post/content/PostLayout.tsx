@@ -1,5 +1,3 @@
-// --- START OF FILE PostLayout.tsx ---
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -11,7 +9,7 @@ import {
 } from "lucide-react";
 import { PostResponse, CommentResponse } from "../../../models/PostResponse";
 import { User } from "../../../models/User";
-import { apiTogglePostPin } from "../../../utils/postApi"; // 引入 API 函数
+import { apiTogglePostPin } from "../../../utils/postApi";
 
 import LazyImage from "../../common/LazyImage";
 import UserBadge from "../../common/UserBadge";
@@ -26,7 +24,7 @@ interface PostLayoutProps {
   post: PostResponse;
   isAuthenticated: boolean;
   user: User | null;
-  token: string | null; // 接收 token
+  token: string | null;
   openWriteModal: (slug: string, onRefresh: () => void) => void;
   openAuthModal: () => void;
   onRefresh: () => void;
@@ -37,7 +35,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
   post,
   isAuthenticated,
   user,
-  token, // 解构 token
+  token,
   openWriteModal,
   openAuthModal,
   onRefresh,
@@ -46,15 +44,14 @@ const PostLayout: React.FC<PostLayoutProps> = ({
   const isOwnerOrAdmin =
     isAuthenticated && user && (user.isAdmin || user.id === post.author?.id);
   const isAdmin = isAuthenticated && user && user.isAdmin;
-  const [isPinning, setIsPinning] = useState(false); // 用于处理置顶操作的 loading 状态
+  const [isPinning, setIsPinning] = useState(false);
 
-  // 处理切换置顶状态的函数
   const handleTogglePin = async () => {
     if (!isAdmin || !token || isPinning) return;
     setIsPinning(true);
     try {
       await apiTogglePostPin(post.slug, !post.topped, token);
-      onRefresh(); // 操作成功后，调用父组件的刷新函数以获取最新文章状态
+      onRefresh();
     } catch (error) {
       console.error("Failed to toggle pin status", error);
       alert("置顶操作失败，请检查网络或联系管理员。");
@@ -113,7 +110,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-4 relative">
-      <BackButton to="/" />
+      {/* 移除了原本置于顶部的 BackButton，保留 BackToTop 按钮 */}
       <BackToTop />
 
       {/* 评论悬浮按钮 */}
@@ -141,7 +138,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
         </button>
       )}
 
-      {/* 新增：置顶/取消置顶悬浮按钮 (仅管理员可见) */}
+      {/* 置顶/取消置顶悬浮按钮 */}
       {isAdmin && (
         <button
           onClick={handleTogglePin}
@@ -163,8 +160,13 @@ const PostLayout: React.FC<PostLayoutProps> = ({
 
       {/* 整体大容器 */}
       <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start">
-        {/* 左侧栏 */}
+        {/* 左侧粘性栏 */}
         <aside className="w-full lg:w-[260px] xl:w-[320px] flex-shrink-0 lg:sticky lg:top-10 space-y-4">
+          {/* 返回按钮置于侧边栏顶端，通过 -mb-4 适当修正组件自带的 mb-8 间距 */}
+          <div className="-mb-4 flex lg:block">
+            <BackButton to="/" />
+          </div>
+
           <div className="bg-white/80 dark:bg-gray-900/85 backdrop-blur-3xl rounded-[32px] shadow-2xl border border-white/30 dark:border-white/5 overflow-hidden">
             <div className="aspect-[16/10] w-full bg-black/5 flex items-center justify-center">
               {post.coverImage?.src ? (
@@ -208,7 +210,8 @@ const PostLayout: React.FC<PostLayoutProps> = ({
               )}
             </div>
           </div>
-          {/* 最新讨论模块 */}
+
+          {/* 最新讨论 */}
           {recentComments.length > 0 && (
             <div className="hidden lg:block bg-white/70 dark:bg-gray-900/75 backdrop-blur-2xl rounded-[24px] border border-white/20 shadow-xl p-4">
               <div className="flex items-center space-x-2 mb-3 text-gray-400">
@@ -236,7 +239,7 @@ const PostLayout: React.FC<PostLayoutProps> = ({
           )}
         </aside>
 
-        {/* 中间 + 右侧目录 容器 */}
+        {/* 中间内容 + 右侧目录 */}
         <div className="flex-1 w-full min-w-0 flex flex-col lg:flex-row gap-6 xl:gap-8 items-start">
           {/* 主文章内容 */}
           <div className="flex-1 w-full space-y-8 min-w-0">

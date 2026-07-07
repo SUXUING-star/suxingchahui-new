@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { marked, Renderer } from "marked";
-import { Download, Lock, ExternalLink } from "lucide-react";
 import LazyImage from "../../common/LazyImage";
 import { slugify } from "../../../utils/markdownUtils";
 import DownloadBlock from "./DownloadBlock";
@@ -24,7 +23,6 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({
     if (!content) return [];
 
     // 【核心补丁 1】：自动将带换行的单反引号（`）升级为三反引号（```）代码块
-    // 匹配前面不是反引号，且内部包含 \n 换行的单反引号对
     let fixedContent = content.replace(
       /(^|[^`\\])`([^`]*?\n[^`]*?)`/g,
       "$1```\n$2\n```",
@@ -46,15 +44,15 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({
         .replace(/'/g, "&#039;");
     };
 
-    // 重写多行代码块，增加滚动条和好看的背景
+    // 重写多行代码块，调整字号适配标准正文
     renderer.code = (code, language) => {
       const langClass = language
         ? ` class="language-${escapeHtml(language)}"`
         : "";
-      return `<pre class="not-prose my-6 p-4 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-x-auto text-[13px] sm:text-sm leading-relaxed font-mono text-gray-800 dark:text-gray-200 shadow-sm whitespace-pre"><code${langClass}>${escapeHtml(code)}</code></pre>`;
+      return `<pre class="not-prose my-6 p-4 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-x-auto text-xs sm:text-sm leading-relaxed font-mono text-gray-800 dark:text-gray-200 shadow-sm whitespace-pre"><code${langClass}>${escapeHtml(code)}</code></pre>`;
     };
 
-    // 行内代码，加上 whitespace-pre-wrap 兜底，防止意外的换行错乱
+    // 行内代码
     renderer.codespan = (code) => {
       return `<code class="px-1.5 py-0.5 mx-0.5 bg-gray-100/80 dark:bg-gray-800/80 border border-gray-200/80 dark:border-gray-700/80 rounded-md text-[0.85em] font-mono text-blue-600 dark:text-blue-400 break-words whitespace-pre-wrap before:hidden after:hidden">${code}</code>`;
     };
@@ -66,7 +64,6 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({
 
     // 【核心补丁 2】：保护代码块里的内容不被正则切碎
     const codeBlocks: string[] = [];
-    // 现在 fixedContent 里的多行单反引号已经变成 ``` 了，安全提取
     const codeBlockRegex = /(```[\s\S]*?```|`[^`]*`)/g;
     const safeContent = fixedContent.replace(codeBlockRegex, (match) => {
       codeBlocks.push(match);
@@ -159,7 +156,12 @@ const ContentRenderer: React.FC<ContentRendererProps> = ({
   }, [content, contentImages, downloads, isAuthenticated, onAuthRequired]);
 
   return (
-    <div className="prose prose-lg dark:prose-invert max-w-none">
+    /*
+      将 prose-lg 修改为默认的 prose，
+      让基准字号从 18px 恢复为 16px，
+      此时正文、标题比、引用和列表字号会自动缩减并重置出合理的比例。
+    */
+    <div className="prose dark:prose-invert max-w-none text-gray-800 dark:text-gray-200">
       {htmlContent}
     </div>
   );
