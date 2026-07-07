@@ -6,7 +6,7 @@ import { useNotification } from "../context/NotificationContext";
 import { apiGetMyPosts, apiDeletePost } from "../utils/postApi";
 import { PostResponse } from "../models/PostResponse";
 
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import StatusBadge from "../components/common/StatusBadge";
 import ConfirmModal from "../components/common/ConfirmModal";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";

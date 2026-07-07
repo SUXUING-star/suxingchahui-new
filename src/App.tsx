@@ -11,7 +11,7 @@ import Footer from "@/components/layout/Footer";
 import LeftSidebar from "@/components/layout/LeftSidebar";
 import RightSidebar from "@/components/layout/RightSidebar";
 import BackgroundLayout from "@/components/layout/BackgroundLayout";
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import GlobalModalWrapper from "@/components/layout/GlobalModalWrapper";
 import Broadcast from "@/components/common/Broadcast";
 

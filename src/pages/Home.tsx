@@ -6,8 +6,9 @@ import React, {
   ChangeEvent,
 } from "react";
 import PostCard from "../components/post/PostCard";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
+import SectionHeader from "../components/ui/SectionHeader"; // 引入封装的 SectionHeader
 import {
   getPaginatedPosts,
   getTagCloudData,
@@ -15,7 +16,6 @@ import {
 } from "../utils/postApi";
 import { useNotification } from "../context/NotificationContext";
 import { PostResponse } from "../models/PostResponse";
-// 1. 具名引入 animate 和 stagger
 import { animate, stagger } from "animejs";
 
 const POSTS_PER_PAGE = 24;
@@ -94,7 +94,6 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (!loading && (posts.length > 0 || pinnedPosts.length > 0)) {
-      // 2. 更改为 v4 的 animate 写法，并使用 stagger 和 ease 参数名
       animate(".home-animate", {
         translateY: [30, 0],
         opacity: [0, 1],
@@ -188,12 +187,9 @@ const Home: React.FC = () => {
 
       {pinnedPosts.length > 0 && (
         <section className="px-4 home-animate">
-          <div className="inline-flex items-center space-x-4 mb-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-sm">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(37,99,235,1)]"></div>
-            <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">
-              置顶
-            </h2>
-          </div>
+          {/* 使用封装后的置顶头部 */}
+          <SectionHeader type="pinned" title="置顶" />
+
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 p-4">
             {pinnedPosts.map((post) => (
               <PostCard key={post.id} post={post} />
@@ -203,12 +199,9 @@ const Home: React.FC = () => {
       )}
 
       <section className="px-4 home-animate">
-        <div className="inline-flex items-center space-x-4 mb-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/20 shadow-sm">
-          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <h2 className="text-sm font-black dark:text-white uppercase tracking-[0.4em]">
-            最新
-          </h2>
-        </div>
+        {/* 使用封装后的最新部头 */}
+        <SectionHeader type="latest" title="最新" />
+
         <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6 p-4">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />

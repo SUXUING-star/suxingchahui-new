@@ -3,6 +3,7 @@ import TagCloud from "../common/TagCloud";
 import { getTagCloudData } from "../../utils/postApi";
 import { animate } from "animejs";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import TagIcon from "../ui/TagIcon"; // 引入全新的 TagIcon
 
 interface TagCloudItem {
   tag: string;
@@ -71,10 +72,18 @@ const RightSidebar: React.FC = () => {
       >
         {/* 折叠控制栏 */}
         <div
-          className={`flex items-center w-full ${
-            isExpanded ? "justify-end mb-3" : "justify-center"
-          }`}
+          className={`flex items-center ${isExpanded ? "justify-between mb-4" : "justify-center flex-col space-y-4"}`}
         >
+          {isExpanded && (
+            <h2 className="text-base xl:text-lg font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
+              {/* 使用 TagIcon */}
+              <TagIcon
+                size={18}
+                className="text-blue-500 mr-1.5 flex-shrink-0"
+              />{" "}
+              标签索引
+            </h2>
+          )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 bg-gray-50/80 dark:bg-gray-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 rounded-xl transition-all active:scale-95 border border-gray-100 dark:border-white/5"
@@ -102,10 +111,6 @@ const RightSidebar: React.FC = () => {
               </p>
             </div>
           ) : (
-            /*
-              使用更宽裕的 max-h-[500px] 限制高度并开启溢出滚动，
-              此时将直接使用我们在 index.css 里定义好的优雅全局极细滚动条。
-            */
             <div className="max-h-[500px] overflow-y-auto pr-1">
               <TagCloud tagData={tagData} />
             </div>

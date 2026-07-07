@@ -121,7 +121,7 @@ const Search: React.FC = () => {
         <div
           ref={dropdownRef}
           // 💡 视觉统一改动：背景调整为 bg-white/80 dark:bg-gray-900/90，边框调整为 border-white/20 dark:border-white/5，圆角统一为 sm:rounded-[24px]
-          className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 mt-0 sm:mt-2 w-full sm:w-96 bg-white/80 dark:bg-gray-900/90 backdrop-blur-xl sm:rounded-[24px] shadow-2xl shadow-black/5 z-50 border border-white/20 dark:border-white/5 overflow-hidden opacity-0"
+          className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 mt-0 sm:mt-2 w-full sm:w-96 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl sm:rounded-[24px] shadow-2xl shadow-black/5 z-50 border border-white/20 dark:border-white/5 overflow-hidden opacity-0"
         >
           {/* 输入框边框在暗色模式下也略微淡化以适应磨砂背景 */}
           <div className="flex items-center gap-2 p-4 border-b border-gray-100 dark:border-white/5">
@@ -190,7 +190,7 @@ const Search: React.FC = () => {
 
             {!searchTerm && (
               <div className="search-item-animate opacity-0 py-10 text-center text-gray-400 text-sm italic">
-                输入痕迹，寻索星火...
+                输入搜索关键词...
               </div>
             )}
           </div>

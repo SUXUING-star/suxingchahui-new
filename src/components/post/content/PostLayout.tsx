@@ -17,8 +17,8 @@ import LazyImage from "../../common/LazyImage";
 import UserBadge from "../../common/UserBadge";
 import ContentRenderer from "./ContentRenderer";
 import CommentSection from "../comment/CommentSection";
-import BackButton from "../../common/BackButton";
-import BackToTop from "../../common/BackToTop";
+import BackButton from "../../ui/BackButton";
+import BackToTop from "../../ui/BackToTop";
 import TableOfContents from "./TableOfContents";
 import { extractHeadings } from "../../../utils/markdownUtils";
 

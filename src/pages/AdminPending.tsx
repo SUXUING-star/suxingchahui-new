@@ -3,7 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
 import { apiGetPendingPosts, apiReviewPost } from "../utils/postApi";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import UserBadge from "../components/common/UserBadge";
 import { Check, X, Eye } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getArchive } from "../utils/postApi";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
 import PostCard from "../components/post/PostCard";
 // 1. 具名引入 animate 和 stagger

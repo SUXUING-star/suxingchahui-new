@@ -15,7 +15,7 @@ import { useLayout } from "@/context/LayoutContext";
 import { getBooksFiltered, deleteBooks, getBookStats } from "@/utils/bookApi";
 import { BookResponse } from "@/models/BookReponse";
 
-import LoadingSpinner from "@/components/common/LoadingSpinner";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import BookCard from "@/components/book/BookCard";
 import BookDetailModal from "@/components/book/BookDetailModal";
 import BookStatsSidebar from "@/components/book/BookStatsSidebar";

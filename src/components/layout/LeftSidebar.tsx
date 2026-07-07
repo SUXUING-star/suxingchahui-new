@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Zap, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import NewIcon from "../ui/NewIcon"; // 引入全新的 NewIcon
 import { getRecentPosts } from "../../utils/postApi";
-// 1. 改为具名引入
 import { animate } from "animejs";
 import UserBadge from "../common/UserBadge";
 import LazyImage from "../common/LazyImage";
@@ -30,7 +30,6 @@ const LeftSidebar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // 2. 检查节点是否存在，并使用 v4 的 animate 函数和 ease 属性名
     if (!isLoading && recentPosts.length > 0 && sidebarRef.current) {
       animate(sidebarRef.current, {
         translateX: [-50, 0],
@@ -77,7 +76,11 @@ const LeftSidebar: React.FC = () => {
         >
           {isExpanded && (
             <h2 className="text-base xl:text-lg font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter whitespace-nowrap overflow-hidden">
-              <Zap size={18} className="text-amber-500 mr-1.5 flex-shrink-0" />
+              {/* 使用 NewIcon */}
+              <NewIcon
+                size={18}
+                className="text-amber-500 mr-1.5 flex-shrink-0"
+              />
               最新同步
             </h2>
           )}

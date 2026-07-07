@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Tag as TagIcon } from "lucide-react";
 import { getTagsData } from "../utils/postApi";
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
 import PostCard from "../components/post/PostCard";
 // 1. 具名引入 animate 和 stagger

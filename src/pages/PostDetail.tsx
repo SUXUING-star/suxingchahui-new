@@ -7,7 +7,7 @@ import { useLayout } from "../context/LayoutContext";
 import { getPostBySlug } from "../utils/postApi"; // 💡 引入更名后的 getPostBySlug
 import { PostResponse } from "../models/PostResponse";
 
-import LoadingSpinner from "../components/common/LoadingSpinner";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import StatusPlaceholder from "../components/common/StatusPlaceholder";
 import PostLayout from "../components/post/content/PostLayout";
 
