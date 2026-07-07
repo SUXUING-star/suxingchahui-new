@@ -77,3 +77,30 @@
     border-radius: 20px;
     cursor: pointer;
 }
+
+/* 全局极细优雅滚动条定义 */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3); /* 亮色模式透明灰 */
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.15); /* 暗色模式弱化轨道色 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.3);
+}
