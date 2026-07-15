@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import TagCloud from "../common/TagCloud";
-import { getTagCloudData } from "../../utils/postApi";
 import { animate } from "animejs";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
-import TagIcon from "../ui/TagIcon"; // 引入全新的 TagIcon
+import React, { useEffect, useRef, useState } from "react";
+import { getTagCloudData } from "../../utils/postApi";
+import TagCloud from "../common/TagCloud";
+import TagIcon from "../ui/TagIcon";
 
 interface TagCloudItem {
   tag: string;
@@ -17,18 +17,33 @@ const RightSidebar: React.FC = () => {
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const fetchTags = async () => {
+    let isMounted = true;
+
+    // 延迟 100 毫秒执行请求，等待页面切换的状态变更稳定
+    const timer = setTimeout(async () => {
+      if (!isMounted) return;
       setIsLoading(true);
       try {
         const data = await getTagCloudData();
-        setTagData(data || []);
+        if (isMounted) {
+          setTagData(data || []);
+        }
       } catch (error) {
-        console.error("Failed to fetch tag cloud data:", error);
+        if (isMounted) {
+          console.error("Failed to fetch tag cloud data:", error);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
+    }, 100);
+
+    // 卸载时清除延时，防止在瞬间销毁时触发 API
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
     };
-    fetchTags();
   }, []);
 
   useEffect(() => {
@@ -51,7 +66,7 @@ const RightSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`py-4 transition-all duration-500 ease-in-out opacity-0 ${
+      className={`py-4 transition-all duration-500 ease-in-out ${
         isExpanded ? "w-[clamp(180px,20vw,250px)]" : "w-16"
       }`}
       ref={sidebarRef}
@@ -70,13 +85,11 @@ const RightSidebar: React.FC = () => {
           }
         `}
       >
-        {/* 折叠控制栏 */}
         <div
           className={`flex items-center ${isExpanded ? "justify-between mb-4" : "justify-center flex-col space-y-4"}`}
         >
           {isExpanded && (
             <h2 className="text-base xl:text-lg font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter uppercase whitespace-nowrap overflow-hidden">
-              {/* 使用 TagIcon */}
               <TagIcon
                 size={18}
                 className="text-blue-500 mr-1.5 flex-shrink-0"
@@ -96,7 +109,6 @@ const RightSidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* 动画包裹容器 */}
         <div
           className={`transition-all duration-500 ease-in-out origin-top w-full ${
             isExpanded

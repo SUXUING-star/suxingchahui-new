@@ -1,14 +1,13 @@
 // src/utils/postApi.ts
 
-import { apiGet, apiPost, apiPut, apiDelete, apiPostForm } from "./apiCore";
+import { apiDelete, apiGet, apiPost, apiPostForm, apiPut } from "./apiCore";
 // 引入接口及其对应的工厂函数
-import { PostResponse, createPostResponse } from "../models/PostResponse";
 import { PostRequest } from "../models/PostRequest";
+import { PostResponse, createPostResponse } from "../models/PostResponse";
 
 // --- 业务转换工具 ---
 export const normalizePost = (rawPost: any): any => {
   if (!rawPost) return null;
-  // 替换为工厂函数形式
   if (Array.isArray(rawPost)) return rawPost.map((p) => createPostResponse(p));
   return createPostResponse(rawPost);
 };
@@ -23,7 +22,6 @@ export const getPostById = (
   return apiGet<PostResponse>(endpoint, token, normalizePost);
 };
 
-// --- 读操作 (GET) ---
 export const getPostBySlug = (
   slug: string,
   token: string | null = null,
@@ -45,28 +43,55 @@ export const getPaginatedPosts = ({
   });
   if (category) params.append("category", category);
   if (tag) params.append("tag", tag);
-  return apiGet(`/posts?${params.toString()}`, null, (data) => ({
-    ...data,
-    posts: normalizePost(data.posts),
-    pinnedPosts: normalizePost(data.pinnedPosts),
-  }));
+  return apiGet(
+    `/posts?${params.toString()}`,
+    null,
+    (data) => ({
+      ...data,
+      posts: normalizePost(data.posts),
+      pinnedPosts: normalizePost(data.pinnedPosts),
+    }),
+    {
+      useLocalCache: true,
+      localCacheTTL: 30000,
+    },
+  );
 };
 
 export const getCategories = (): Promise<any[]> =>
-  apiGet("/posts/categories", null, (data: any[]) =>
-    data.map((category) => ({
-      ...category,
-      posts: normalizePost(category.posts || []),
-    })),
+  apiGet(
+    "/posts/categories",
+    null,
+    (data: any[]) =>
+      data.map((category) => ({
+        ...category,
+        posts: normalizePost(category.posts || []),
+      })),
+    {
+      useLocalCache: true,
+      localCacheTTL: 60000,
+    },
   );
 
 export const getArchive = (): Promise<PostResponse[]> =>
   apiGet("/posts/archive", null, normalizePost);
+
 export const getTagsData = (): Promise<PostResponse[]> =>
   apiGet("/posts/tags", null, normalizePost);
+
+// 💡 仅需一行配置，即刻享有一分钟本地缓存
 export const getRecentPosts = (): Promise<PostResponse[]> =>
-  apiGet("/posts/recent", null, normalizePost);
-export const getTagCloudData = (): Promise<any[]> => apiGet("/tags/cloud");
+  apiGet("/posts/recent", null, normalizePost, {
+    useLocalCache: true,
+    localCacheTTL: 60000,
+  });
+
+// 💡 同理，一行配置即可为标签索引开启本地缓存
+export const getTagCloudData = (): Promise<any[]> =>
+  apiGet("/tags/cloud", null, undefined, {
+    useLocalCache: true,
+    localCacheTTL: 60000,
+  });
 
 export const apiSearchPosts = (query: string): Promise<PostResponse[]> => {
   if (!query) return Promise.resolve([]);
@@ -87,22 +112,17 @@ export const apiCreatePost = (
   postRequest: PostRequest,
   token: string,
 ): Promise<any> => {
-  // 由于 PostRequest 现在是 interface，运行时使用 typeof 校验 toJSON 方法是否存在
   if (!postRequest || typeof postRequest.toJSON !== "function")
     throw new Error("Params must be PostRequest");
   return apiPost("/posts", postRequest.toJSON(), token);
 };
+
 export const apiUpdatePost = (
   slug: string,
   postRequest: PostRequest,
   token: string,
 ): Promise<any> => apiPut(`/posts/${slug}`, postRequest.toJSON(), token);
-/**
- * 新增：切换文章置顶状态
- * @param slug - 文章的 slug
- * @param topped - 目标置顶状态 (true: 置顶, false: 取消置顶)
- * @param token - 用户认证 token
- */
+
 export const apiTogglePostPin = (
   slug: string,
   topped: boolean,
@@ -112,8 +132,10 @@ export const apiTogglePostPin = (
 
 export const apiDeletePost = (slug: string, token: string): Promise<any> =>
   apiDelete(`/posts/${slug}`, token);
+
 export const apiPostComment = (data: any, token: string): Promise<any> =>
   apiPost("/posts/comment", data, token);
+
 export const apiReviewPost = (
   postId: string,
   action: "approve" | "reject",

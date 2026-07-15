@@ -35,7 +35,6 @@ export interface PostResponse {
   downloads: any[];
   author: { nickname: string; avatar: string | null; id?: string };
   comments: CommentResponse[];
-  _id: string | null;
   getFormattedDate(): string;
   isEdited(): boolean;
 }
@@ -84,7 +83,6 @@ export function createPostResponse(raw: any = {}): PostResponse {
     .trim();
 
   return {
-    _id: raw._id || null,
     id: raw.id || raw.slug || raw._id,
     slug: raw.slug || raw.id,
     title: raw.title || "Untitled",

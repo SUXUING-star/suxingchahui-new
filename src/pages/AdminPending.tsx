@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { Check, Eye, X } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import StatusPlaceholder from "../components/common/StatusPlaceholder";
+import UserBadge from "../components/common/UserBadge";
+import LoadingSpinner from "../components/ui/LoadingSpinner";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
-import { apiGetPendingPosts, apiReviewPost } from "../utils/postApi";
-import StatusPlaceholder from "../components/common/StatusPlaceholder";
-import LoadingSpinner from "../components/ui/LoadingSpinner";
-import UserBadge from "../components/common/UserBadge";
-import { Check, X, Eye } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
 import { PostResponse } from "../models/PostResponse";
+import { apiGetPendingPosts, apiReviewPost } from "../utils/postApi";
 
 type ReviewAction = "approve" | "reject";
 
@@ -49,9 +49,7 @@ const AdminPending: React.FC = () => {
         `文章已${action === "approve" ? "通过发布" : "锁定拒绝"}`,
         "success",
       );
-      setPosts((prevPosts) =>
-        prevPosts.filter((p) => (p._id || p.id) !== postId),
-      );
+      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
     } catch (err: any) {
       showNotification(err.message || "审核操作失败", "error");
     }
@@ -142,14 +140,14 @@ const AdminPending: React.FC = () => {
                 {/* 审核操作组 - 并排显示 */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleReview(post._id || post.id, "approve")}
+                    onClick={() => handleReview(post.id, "approve")}
                     className="flex-1 flex items-center justify-center py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-all shadow-sm shadow-emerald-200 dark:shadow-none"
                     title="通过"
                   >
                     <Check size={16} />
                   </button>
                   <button
-                    onClick={() => handleReview(post._id || post.id, "reject")}
+                    onClick={() => handleReview(post.id, "reject")}
                     className="flex-1 flex items-center justify-center py-2 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-all"
                     title="拒绝"
                   >

@@ -1,19 +1,24 @@
-import React, { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 
 import { AuthProvider } from "@/context/AuthContext";
-import { NotificationProvider } from "./context/NotificationContext";
 import { LayoutProvider, useLayout } from "./context/LayoutContext";
 import { ModalProvider } from "./context/ModalContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
-import Header from "@/components/layout/Header";
+import Broadcast from "@/components/common/Broadcast";
+import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import Footer from "@/components/layout/Footer";
+import GlobalModalWrapper from "@/components/layout/GlobalModalWrapper";
+import Header from "@/components/layout/Header";
 import LeftSidebar from "@/components/layout/LeftSidebar";
 import RightSidebar from "@/components/layout/RightSidebar";
-import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import GlobalModalWrapper from "@/components/layout/GlobalModalWrapper";
-import Broadcast from "@/components/common/Broadcast";
 
 const Home = lazy(() => import("@/pages/Home"));
 const PostDetail = lazy(() => import("@/pages/PostDetail"));
@@ -26,19 +31,48 @@ const MyBooks = lazy(() => import("@/pages/MyBooks"));
 const AdminPending = lazy(() => import("@/pages/AdminPending"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
+// 简单的自定义 Hook，用于获取当前窗口宽度是否支持显示侧边栏
+const useIsLargeScreen = (breakpoint = 850) => {
+  const [isLarge, setIsLarge] = useState(
+    typeof window !== "undefined" ? window.innerWidth >= breakpoint : true,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLarge(window.innerWidth >= breakpoint);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [breakpoint]);
+
+  return isLarge;
+};
+
 const AppLayout = () => {
   const { hideSidebars } = useLayout();
+  const isLargeScreen = useIsLargeScreen(850);
+  const location = useLocation();
+
+  // 1. 定义哪些路由绝对不需要显示侧边栏，避免状态更新滞后导致的瞬间挂载
+  const noSidebarPaths = ["/admin/pending", "/login", "/register"];
+  const isNoSidebarRoute = noSidebarPaths.some((path) =>
+    location.pathname.startsWith(path),
+  );
+
+  // 2. 只有在非隐藏状态、非静默路由、且屏幕足够大时，才渲染侧边栏
+  const shouldRenderSidebars =
+    !hideSidebars && !isNoSidebarRoute && isLargeScreen;
 
   return (
     <BackgroundLayout>
       <div className="flex flex-col min-h-screen">
-        {/* 💡 移到这里：Header 独占最顶部，宽度不受侧边栏挤压 */}
-        {!hideSidebars && <Header />}
+        {/* Header 只有在非隐藏模式下展示 */}
+        {!hideSidebars && !isNoSidebarRoute && <Header />}
 
         {/* 下方放置侧边栏和主内容区 */}
         <div className="flex-1 flex w-full max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 gap-4">
-          {!hideSidebars && (
-            <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
+          {shouldRenderSidebars && (
+            <div className="flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-24 h-fit pb-10">
                 <LeftSidebar />
               </div>
@@ -63,11 +97,11 @@ const AppLayout = () => {
               </Suspense>
             </main>
 
-            {!hideSidebars && <Footer />}
+            {!hideSidebars && !isNoSidebarRoute && <Footer />}
           </div>
 
-          {!hideSidebars && (
-            <div className="hidden min-[850px]:block flex-shrink-0 relative transition-all duration-500 z-30">
+          {shouldRenderSidebars && (
+            <div className="flex-shrink-0 relative transition-all duration-500 z-30">
               <div className="sticky top-24 h-fit pb-10">
                 <RightSidebar />
               </div>

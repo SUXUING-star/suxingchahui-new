@@ -1,7 +1,7 @@
 // src/utils/apiCore.ts
 
-import API_BASE_URL from "./apiConfig";
 import pako from "pako";
+import API_BASE_URL from "./apiConfig";
 
 // --- 内部请求管理变量 (仅用于 GET 缓存) ---
 const pendingRequests = new Map<string, Promise<any>>();
@@ -16,6 +16,8 @@ interface ApiClientOptions {
   headers?: HeadersInit; // 允许完全自定义或覆盖 header
   processor?: (data: any) => any; // 数据后处理器
   isFormData?: boolean; // 特殊标记，用于处理文件上传
+  useLocalCache?: boolean; // 💡 是否开启本地持久缓存 (localStorage)
+  localCacheTTL?: number; // 💡 本地缓存时间 (ms)，默认 60000ms
 }
 
 /**
@@ -37,7 +39,7 @@ const handleResponse = async <T>(res: Response): Promise<T> => {
 
   if (res.status === 204) return {} as T;
 
-  // ✨ 核心魔法：检测是否被压缩
+  // 检测是否被压缩
   const isCompressed =
     res.headers.get("X-Response-Compressed") === "true" ||
     res.headers.get("Content-Encoding") === "gzip";
@@ -69,6 +71,8 @@ const apiClient = async <T>(
     headers: customHeaders,
     processor,
     isFormData = false,
+    useLocalCache = false,
+    localCacheTTL = 60000,
   } = options;
 
   const url = `${API_BASE_URL}${endpoint}`;
@@ -76,48 +80,80 @@ const apiClient = async <T>(
   // --- GET 请求走缓存和请求合并逻辑 ---
   if (method === "GET") {
     const authHeader = token ? `Bearer ${token}` : "";
-    const cacheKey = `${url}_${authHeader}`;
+    const memoryCacheKey = `${url}_${authHeader}`;
+    const storageCacheKey = `local_cache_${endpoint}`;
 
-    if (dataCache.has(cacheKey)) return dataCache.get(cacheKey);
-    if (pendingRequests.has(cacheKey)) return pendingRequests.get(cacheKey);
+    // 1. 优先检测并读取本地 LocalStorage 缓存
+    if (useLocalCache) {
+      try {
+        const cachedStr = localStorage.getItem(storageCacheKey);
+        if (cachedStr) {
+          const { timestamp, data } = JSON.parse(cachedStr);
+          if (Date.now() - timestamp < localCacheTTL) {
+            // 本地缓存有效，直接应用数据后处理器并返回
+            return processor ? processor(data) : data;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to read localStorage cache:", e);
+      }
+    }
+
+    // 2. 检测内存缓存和正在进行的重复请求
+    if (dataCache.has(memoryCacheKey)) return dataCache.get(memoryCacheKey);
+    if (pendingRequests.has(memoryCacheKey))
+      return pendingRequests.get(memoryCacheKey);
 
     const requestPromise = (async () => {
       try {
         const res = await fetch(url, {
           headers: { Authorization: authHeader },
         });
-        let data = await handleResponse<any>(res);
-        if (processor) data = processor(data);
+        const rawData = await handleResponse<any>(res);
 
-        dataCache.set(cacheKey, data);
-        setTimeout(() => dataCache.delete(cacheKey), CACHE_TTL);
-        return data;
+        // 请求成功后，如果启用了本地缓存，写入 LocalStorage 归档
+        if (useLocalCache) {
+          try {
+            localStorage.setItem(
+              storageCacheKey,
+              JSON.stringify({
+                timestamp: Date.now(),
+                data: rawData,
+              }),
+            );
+          } catch (e) {
+            console.warn("Failed to write localStorage cache:", e);
+          }
+        }
+
+        let processedData = rawData;
+        if (processor) processedData = processor(rawData);
+
+        dataCache.set(memoryCacheKey, processedData);
+        setTimeout(() => dataCache.delete(memoryCacheKey), CACHE_TTL);
+        return processedData;
       } finally {
-        pendingRequests.delete(cacheKey);
+        pendingRequests.delete(memoryCacheKey);
       }
     })();
 
-    pendingRequests.set(cacheKey, requestPromise);
+    pendingRequests.set(memoryCacheKey, requestPromise);
     return requestPromise;
   }
 
   // --- 非 GET 请求 (POST, PUT, DELETE etc.) 直接发送 ---
   const finalHeaders: Record<string, string> = {};
 
-  // 默认 Content-Type，除非是 FormData 或用户自定义了
   if (body && !isFormData) {
     finalHeaders["Content-Type"] = "application/json";
   }
 
-  // 添加 token
   if (token) {
     finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  // 用户自定义的 header 优先级最高，可以覆盖上面的所有默认值
   Object.assign(finalHeaders, customHeaders);
 
-  // 准备请求体
   let finalBody: BodyInit | undefined = undefined;
   if (body) {
     finalBody = isFormData ? body : JSON.stringify(body);
@@ -134,13 +170,20 @@ const apiClient = async <T>(
   return data;
 };
 
-// --- 对外暴露的便捷方法 (完全向后兼容，不用改业务代码) ---
+// --- 对外暴露的便捷方法 (兼容原业务，并支持新特性) ---
 
 export const apiGet = <T>(
   endpoint: string,
   token: string | null = null,
   processor?: (data: any) => T,
-): Promise<T> => apiClient<T>(endpoint, { method: "GET", token, processor });
+  cacheOptions?: { useLocalCache?: boolean; localCacheTTL?: number },
+): Promise<T> =>
+  apiClient<T>(endpoint, {
+    method: "GET",
+    token,
+    processor,
+    ...cacheOptions,
+  });
 
 export const apiPost = <T>(
   endpoint: string,

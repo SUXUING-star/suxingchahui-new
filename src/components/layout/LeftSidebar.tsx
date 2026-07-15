@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import NewIcon from "../ui/NewIcon"; // 引入全新的 NewIcon
-import { getRecentPosts } from "../../utils/postApi";
 import { animate } from "animejs";
-import UserBadge from "../common/UserBadge";
-import LazyImage from "../common/LazyImage";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { PostResponse } from "../../models/PostResponse";
+import { getRecentPosts } from "../../utils/postApi";
+import LazyImage from "../common/LazyImage";
+import UserBadge from "../common/UserBadge";
+import NewIcon from "../ui/NewIcon";
 
 const LeftSidebar: React.FC = () => {
   const [recentPosts, setRecentPosts] = useState<PostResponse[]>([]);
@@ -15,18 +15,33 @@ const LeftSidebar: React.FC = () => {
   const sidebarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const fetchRecentPosts = async () => {
+    let isMounted = true;
+
+    // 延迟 100 毫秒执行请求，等待页面切换的状态变更稳定
+    const timer = setTimeout(async () => {
+      if (!isMounted) return;
       setIsLoading(true);
       try {
         const posts = await getRecentPosts();
-        setRecentPosts(posts || []);
+        if (isMounted) {
+          setRecentPosts(posts || []);
+        }
       } catch (error) {
-        console.error("Error fetching recent posts:", error);
+        if (isMounted) {
+          console.error("Error fetching recent posts:", error);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
+    }, 100);
+
+    // 卸载时清除延时，防止在瞬间销毁时触发 API
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
     };
-    fetchRecentPosts();
   }, []);
 
   useEffect(() => {
@@ -61,7 +76,7 @@ const LeftSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`py-4 transition-all duration-500 ease-in-out opacity-0 ${
+      className={`py-4 transition-all duration-500 ease-in-out ${
         isExpanded ? "w-[clamp(180px,20vw,250px)]" : "w-16"
       }`}
       ref={sidebarRef}
@@ -76,7 +91,6 @@ const LeftSidebar: React.FC = () => {
         >
           {isExpanded && (
             <h2 className="text-base xl:text-lg font-black text-gray-900 dark:text-gray-100 flex items-center tracking-tighter whitespace-nowrap overflow-hidden">
-              {/* 使用 NewIcon */}
               <NewIcon
                 size={18}
                 className="text-amber-500 mr-1.5 flex-shrink-0"
